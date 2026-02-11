@@ -47,7 +47,7 @@ export function HeroSection() {
               letterSpacing: '-0.02em',
             }}
           >
-            3D objekty
+            Geometrie online
           </h1>
           <p
             style={{
@@ -60,16 +60,10 @@ export function HeroSection() {
               maxWidth: '448px',
             }}
           >
-            Interaktivní 3D prohlížeč geometrických těles podle RVP ZV.
-            Otáčejte, rozbalujte do sítě a zkoumejte vlastnosti
-            krychle, kvádru, hranolů, jehlanů, válce, kužele i koule.
+            Interaktivní výuka geometrie pro 2.–8. třídu podle RVP ZV.
+            Rýsujte kružítkem na obrazovce, otáčejte 3D tělesy,
+            rozbalujte je do sítě a procvičujte výpočty — vše v jedné aplikaci.
           </p>
-          <a
-            href="#objects"
-            style={{ color: '#4d49f3', fontSize: '15px', fontWeight: 400, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
-            Prozkoumat tělesa <span aria-hidden>→</span>
-          </a>
         </div>
 
         {/* Illustration (desktop only) */}
