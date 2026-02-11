@@ -5,7 +5,7 @@
 
   export default defineConfig({
     // Use relative base so built HTML works when opened from build/ or deployed to any path (e.g. GitHub Pages)
-    base: './',
+    base: '/geometry-app/',
     plugins: [react()],
     resolve: {
       // Force single copy of React for all imports (including rysovani/)
