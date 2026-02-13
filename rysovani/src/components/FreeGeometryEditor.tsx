@@ -4103,7 +4103,6 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                                     setSelectedPointId(null);
                                     setActiveGroup(null);
                                 } else {
-                                    // Toggle submenu (pro tablet/touch i desktop)
                                     setActiveGroup(prev => prev === group.id ? null : group.id);
                                 }
                             }}
@@ -4124,18 +4123,19 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                             title={group.label}
                         >
                             <DisplayIcon className="w-6 h-6" />
-                            {/* Indikátor více nástrojů (malý trojúhelník) */}
                             {group.tools.length > 1 && (
                                 <div className={`absolute bottom-1 right-1 w-0 h-0 border-l-[3px] border-l-transparent border-b-[4px] border-r-[3px] border-r-transparent ${
                                     isActive ? 'border-b-white/60' : 'border-b-gray-400'
                                 }`} />
                             )}
                         </button>
-                        {/* Hover Menu pro skupiny s více nástroji */}
-                        {group.tools.length > 1 && (
-                            <div className={`absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 flex-col gap-1 min-w-[160px] z-50 border border-gray-100 ${
-                              activeGroup === group.id ? 'flex pointer-events-auto' : 'hidden group-hover/tool:flex pointer-events-none group-hover/tool:pointer-events-auto'
-                            }`}>
+                        {/* Submenu - čistě stavové, bez group-hover */}
+                        {group.tools.length > 1 && activeGroup === group.id && (
+                            <div 
+                              className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 flex flex-col gap-1 min-w-[160px] z-50 border border-gray-100"
+                              style={{ touchAction: 'auto' }}
+                              onTouchStart={(e) => e.stopPropagation()}
+                            >
                                 <div className="text-[10px] font-bold px-3 py-1 text-gray-400 uppercase tracking-wider">{group.label}</div>
                                 {group.tools.map(tool => {
                                     const ToolIcon = getIcon(tool.icon);
@@ -4224,7 +4224,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                 }
 
                 return (
-                    <div key={group.id} className={`relative group w-full flex justify-center transition-all duration-300 ${isOther ? 'opacity-30 grayscale hover:opacity-60 hover:grayscale-0 cursor-pointer' : ''}`}>
+                    <div key={group.id} className={`relative w-full flex justify-center transition-all duration-300 ${isOther ? 'opacity-30 grayscale cursor-pointer' : ''}`}>
                          {/* Main Button */}
                          <button
                             onClick={(e) => {
@@ -4244,26 +4244,22 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                                     setActiveGroup(isMenuOpen ? null : group.id);
                                 }
                             }}
-                            className={`w-14 h-14 relative flex items-center justify-center transition-transform hover:scale-105 overflow-visible ${isOther ? 'z-20' : 'z-10'} group/maintool`}
+                            className={`w-14 h-14 relative flex items-center justify-center overflow-visible ${isOther ? 'z-20' : 'z-10'}`}
                          >
                             <div className="pointer-events-none relative w-full h-full">
                                 <div className={iconStyle}>
                                     {IconComponent && <IconComponent />}
                                 </div>
                             </div>
-                            {/* Tooltip pro úhloměr */}
-                            {group.id === 'group_angles' && (
-                              <div className="absolute left-full ml-3 px-3 py-1.5 bg-white text-black text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/maintool:opacity-100 transition-opacity pointer-events-none shadow-lg border border-gray-200">
-                                {group.label}
-                              </div>
-                            )}
                          </button>
 
-                         {/* Hover Menu - pouze pokud má grupa více než 1 nástroj */}
-                         {group.tools.length > 1 && (
-                         <div className={`absolute left-[80%] top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 flex-col gap-1 min-w-[160px] z-50 border border-gray-100 ${
-                           isMenuOpen ? 'flex pointer-events-auto' : 'hidden group-hover:flex pointer-events-none group-hover:pointer-events-auto'
-                         }`}>
+                         {/* Submenu - čistě stavové, bez group-hover */}
+                         {group.tools.length > 1 && isMenuOpen && (
+                         <div 
+                           className="absolute left-[80%] top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 flex flex-col gap-1 min-w-[160px] z-50 border border-gray-100"
+                           style={{ touchAction: 'auto' }}
+                           onTouchStart={(e) => e.stopPropagation()}
+                         >
                              <div className="text-[10px] font-bold px-3 py-1 text-gray-400 uppercase tracking-wider">{group.label}</div>
                              {group.tools.map(tool => {
                                  const ToolIcon = getIcon(tool.icon);
