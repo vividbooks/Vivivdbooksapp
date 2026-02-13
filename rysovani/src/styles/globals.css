@@ -197,4 +197,20 @@
 
 html {
   font-size: var(--font-size);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch compatibility for tablets and older devices */
+button, a, [role="button"], input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS zoom on double-tap */
+* {
+  -webkit-touch-callout: none;
+}
+
+/* Ensure interactive elements are always tappable */
+.pointer-events-auto {
+  touch-action: auto;
 }

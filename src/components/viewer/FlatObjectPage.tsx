@@ -89,6 +89,7 @@ export function FlatObjectPage() {
         </button>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
           <ObjectControls
+            objectId={objectId}
             objectName={def.name}
             shapeBadge={def.badge}
             params={params}
@@ -100,6 +101,7 @@ export function FlatObjectPage() {
             onWireframeToggle={() => {}}
             hasUnfold={false}
             mathProperties={mathProperties}
+            is2D={true}
           />
         </div>
         <Link

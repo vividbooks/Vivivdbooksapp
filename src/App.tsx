@@ -6,6 +6,7 @@ import { ObjectPage } from './components/viewer/ObjectPage';
 import { ObjectExercisePage } from './components/viewer/ObjectExercisePage';
 import { FlatObjectPage } from './components/viewer/FlatObjectPage';
 import { RysovaniPage } from './components/rysovani/RysovaniPage';
+import { TutorialPage } from './components/tutorial/TutorialPage';
 import { getObjectDef } from './data/objects';
 
 /** Wrapper that routes to 3D or 2D page */
@@ -22,6 +23,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/rysovani" element={<RysovaniPage />} />
+        <Route path="/tutorial/:tutorialId" element={<TutorialPage />} />
         <Route path="/cviceni" element={<CviceniPage />} />
         <Route path="/cviceni/:objectId/:taskType" element={<CviceniSetupPage />} />
         <Route path="/:objectId/cviceni/:taskType" element={<ObjectExercisePage />} />

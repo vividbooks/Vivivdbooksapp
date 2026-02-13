@@ -13,6 +13,9 @@ import {
   FlipHorizontal,
   ArrowRight,
   Pencil,
+  BookOpen,
+  Square,
+  Box,
 } from 'lucide-react';
 
 // SVG illustrations from rysovani design
@@ -185,7 +188,130 @@ const constructionItems: ConstructionItem[] = [
   },
 ];
 
+/* ── Tutoriály data ── */
+
+interface TutorialItem {
+  id: string;
+  title: string;
+  description: string;
+  grade: string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+  route: string;
+}
+
+const tutorialItems: TutorialItem[] = [
+  {
+    id: 'ctverec2d-obvod',
+    title: 'Obvod čtverce',
+    description: 'Nauč se, co je obvod a jak ho spočítat ze strany čtverce.',
+    grade: '3. ročník',
+    icon: Square,
+    color: '#4d49f3',
+    bgColor: '#e0e7ff',
+    route: '/tutorial/ctverec2d-obvod',
+  },
+  {
+    id: 'ctverec2d-obsah',
+    title: 'Obsah čtverce',
+    description: 'Zjisti, kolik čtverečních centimetrů se vejde do čtverce.',
+    grade: '4. ročník',
+    icon: Square,
+    color: '#e11d48',
+    bgColor: '#ffe4e6',
+    route: '/tutorial/ctverec2d-obsah',
+  },
+  {
+    id: 'krychle-objem',
+    title: 'Objem krychle',
+    description: 'Vyplň krychli malými kostkami a odvoď vzorec pro objem.',
+    grade: '5. ročník',
+    icon: Box,
+    color: '#059669',
+    bgColor: '#d1fae5',
+    route: '/tutorial/krychle-objem',
+  },
+];
+
 /* ── Card components ── */
+
+function TutorialCard({ item }: { item: TutorialItem }) {
+  const navigate = useNavigate();
+  const Icon = item.icon;
+  return (
+    <button
+      onClick={() => navigate(item.route)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        border: '1px solid #e5e7eb',
+        background: 'white',
+        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+        textDecoration: 'none',
+        textAlign: 'left' as const,
+        color: 'inherit',
+        transition: 'all 200ms',
+        cursor: 'pointer',
+        width: '100%',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.02)';
+        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0,0,0,0.05)';
+      }}
+      onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+      onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; }}
+    >
+      {/* Icon area */}
+      <div
+        style={{
+          height: 140,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: item.bgColor,
+        }}
+      >
+        <Icon size={48} strokeWidth={1.4} style={{ color: item.color, opacity: 0.8 }} />
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div style={{ color: '#4e5871', fontSize: '18px', fontWeight: 500, marginBottom: '6px' }}>
+          {item.title}
+        </div>
+        <p style={{ color: '#4e5871', opacity: 0.7, fontSize: '13px', lineHeight: '20px', fontWeight: 400, marginBottom: '16px', flex: 1 }}>
+          {item.description}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '9999px',
+              background: '#f0f0ff',
+              color: '#4d49f3',
+              fontSize: '12px',
+              fontWeight: 400,
+            }}
+          >
+            <BookOpen size={12} />
+            {item.grade}
+          </span>
+          <ArrowRight size={16} style={{ color: '#4d49f3', opacity: 0.5 }} />
+        </div>
+      </div>
+    </button>
+  );
+}
 
 function DrawingCard({ item }: { item: DrawingItem }) {
   const navigate = useNavigate();

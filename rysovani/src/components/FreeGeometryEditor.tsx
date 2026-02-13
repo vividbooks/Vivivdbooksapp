@@ -1236,6 +1236,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   const handleMouseDown = (e: React.MouseEvent) => {
     if (animState.isActive) return;
     
+    // Zavřít otevřené submenu při kliknutí na canvas
+    setActiveGroup(null);
+    
     // Ignorovat mouse eventy ktere prisly kratce po touch eventu (< 500ms)
     // Prevence duplicitniho zpracovani na tabletech
     const timeSinceTouch = Date.now() - lastTouchTimeRef.current;
@@ -2179,6 +2182,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   const handleTouchStart = (e: React.TouchEvent) => {
     // Prevent default vzdy pro vsechny nastroje aby se zabranilo mouse eventum
     e.preventDefault();
+    
+    // Zavřít otevřené submenu při dotyku na canvas
+    setActiveGroup(null);
     
     // Zaznamej cas touch eventu
     lastTouchTimeRef.current = Date.now();
@@ -4061,7 +4067,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
       {/* TOOLBAR - LEFT SIDE (NEW DESIGN) */}
       {!recordingState.showPlayer && !circleInput.visible && !angleInput.visible && !segmentInput.visible && (
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 pointer-events-auto" style={{ touchAction: 'auto' }}>
          <div className="bg-[#F2F2F2] rounded-full p-2 flex flex-col items-center shadow-sm w-[72px] py-8">
             {/* Tlačítko Zpět */}
             <button
@@ -4096,11 +4102,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                                     setSelectedPointId(null);
                                     setActiveGroup(null);
                                 } else {
-                                    // Pro skupiny s více nástroji: přepnout na další nástroj ve skupině
-                                    const currentIdx = group.tools.findIndex(t => t.id === activeTool);
-                                    const nextIdx = (currentIdx + 1) % group.tools.length;
-                                    setActiveTool(group.tools[nextIdx].id as ToolType);
-                                    setSelectedPointId(null);
+                                    // Toggle submenu (pro tablet/touch i desktop)
+                                    setActiveGroup(prev => prev === group.id ? null : group.id);
                                 }
                             }}
                             className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 relative ${
@@ -4118,7 +4121,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                         </button>
                         {/* Hover Menu pro skupiny s více nástroji */}
                         {group.tools.length > 1 && (
-                            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 hidden group-hover/tool:flex flex-col gap-1 min-w-[160px] animate-in fade-in slide-in-from-left-2 z-50 pointer-events-none group-hover/tool:pointer-events-auto border border-gray-100">
+                            <div className={`absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 flex-col gap-1 min-w-[160px] z-50 border border-gray-100 ${
+                              activeGroup === group.id ? 'flex pointer-events-auto' : 'hidden group-hover/tool:flex pointer-events-none group-hover/tool:pointer-events-auto'
+                            }`}>
                                 <div className="text-[10px] font-bold px-3 py-1 text-gray-400 uppercase tracking-wider">{group.label}</div>
                                 {group.tools.map(tool => {
                                     const ToolIcon = getIcon(tool.icon);
@@ -4227,7 +4232,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
                          {/* Hover Menu - pouze pokud má grupa více než 1 nástroj */}
                          {group.tools.length > 1 && (
-                         <div className="absolute left-[80%] top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 hidden group-hover:flex flex-col gap-1 min-w-[160px] animate-in fade-in slide-in-from-left-2 z-50 pointer-events-none group-hover:pointer-events-auto border border-gray-100">
+                         <div className={`absolute left-[80%] top-1/2 -translate-y-1/2 ml-2 bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-2 flex-col gap-1 min-w-[160px] z-50 border border-gray-100 ${
+                           isMenuOpen ? 'flex pointer-events-auto' : 'hidden group-hover:flex pointer-events-none group-hover:pointer-events-auto'
+                         }`}>
                              <div className="text-[10px] font-bold px-3 py-1 text-gray-400 uppercase tracking-wider">{group.label}</div>
                              {group.tools.map(tool => {
                                  const ToolIcon = getIcon(tool.icon);

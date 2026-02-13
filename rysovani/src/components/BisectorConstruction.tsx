@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { useIsMobile } from './ui/use-mobile';
 import { ConstructionControlPanel } from './ConstructionControlPanel';
+import { ConstructionStepLog, StepNotation } from './ConstructionStepLog';
 
 interface Point {
   x: number;
@@ -29,7 +30,7 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
   const animationFrameRef = useRef<number>();
   const [currentStep, setCurrentStep] = useState(0);
   // Výchozí zoom - menší pro mobilní zařízení
-  const [scale, setScale] = useState(isMobile ? 0.15 : 0.5);
+  const [scale, setScale] = useState(isMobile ? 0.2 : 0.4);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Point>({ x: 0, y: 0 });
@@ -37,7 +38,19 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
   const [animProgress, setAnimProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
   const [showCaptions, setShowCaptions] = useState(true);
-  
+  const [showProtocol, setShowProtocol] = useState(false);
+
+  // Zápis konstrukce - formální notace kroků
+  const stepNotations: StepNotation[] = [
+    { notation: 'AB; |AB| = 6 cm', description: 'Narýsuj úsečku AB', type: 'segment' },
+    { notation: 'A ∈ AB', description: 'Zapíchni kružítko do bodu A', type: 'point' },
+    { notation: 'k₁(A; r), r > |AB|/2', description: 'Narýsuj kružnici z bodu A', type: 'circle' },
+    { notation: 'B ∈ AB', description: 'Zapíchni kružítko do bodu B', type: 'point' },
+    { notation: 'k₂(B; r)', description: 'Narýsuj kružnici z bodu B', type: 'circle' },
+    { notation: 'X, Y = k₁ ∩ k₂', description: 'Označ průsečíky kružnic', type: 'point' },
+    { notation: 'o ≡ XY; o ⊥ AB', description: 'Narýsuj osu úsečky', type: 'line' },
+  ];
+
   // Pravítko a kružítko
   const rulerImageRef = useRef<HTMLImageElement | null>(null);
   const [rulerLoaded, setRulerLoaded] = useState(false);
@@ -252,21 +265,21 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
 
   // Kreslení mřížky
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    const gridSize = 20;
-    // Méně výrazná mřížka
-    ctx.strokeStyle = darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(229, 231, 235, 0.5)';
+    const gridSize = 50 * scale;
+    ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 
-    // Vertikální čáry
-    for (let x = 0; x <= canvasSize.width; x += gridSize) {
+    const startX = offset.x % gridSize;
+    const startY = offset.y % gridSize;
+
+    for (let x = startX; x <= canvasSize.width; x += gridSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvasSize.height);
       ctx.stroke();
     }
 
-    // Horizontální čáry
-    for (let y = 0; y <= canvasSize.height; y += gridSize) {
+    for (let y = startY; y <= canvasSize.height; y += gridSize) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(canvasSize.width, y);
@@ -279,41 +292,37 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
     ctx: CanvasRenderingContext2D,
     p: Point,
     label: string,
-    color: string = '#000',
+    _color: string = '#000',
     offsetX: number = 12,
     offsetY: number = -12,
     dpr: number = 1
   ) => {
-    // Uložit aktuální transformaci
     ctx.save();
-    
-    // Resetovat scale pro text a aplikovat pouze DPR
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     
-    // Převést world souřadnice na screen souřadnice (v logických pixelech)
     const screenX = p.x * scale + offset.x;
     const screenY = p.y * scale + offset.y;
     
-    // Změřit šířku textu pro centrování kruhu - Arial font
-    ctx.font = '600 22px Arial, sans-serif';
+    // Modré kolečko + bílý text (jako FreeGeometryEditor)
+    ctx.font = 'bold 16px Inter, system-ui, sans-serif';
     const metrics = ctx.measureText(label);
     const textWidth = metrics.width;
+    const padding = 8;
     
-    // Nakreslit šedé kolečko jako pozadí
     const bgX = screenX + offsetX + textWidth / 2;
-    const bgY = screenY + offsetY - 8; // Posunout nahoru (protože text má baseline dole)
-    const bgRadius = Math.max(textWidth, 16) / 2 + 6; // Radius podle šířky textu
+    const bgY = screenY + offsetY - 8;
+    const bgRadius = Math.max(textWidth, 16) / 2 + padding;
     
-    ctx.fillStyle = darkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(200, 200, 200, 0.35)';
+    ctx.fillStyle = '#3b82f6';
     ctx.beginPath();
     ctx.arc(bgX, bgY, bgRadius, 0, Math.PI * 2);
     ctx.fill();
     
-    // Nakreslit text ve screen space (vždy stejná velikost)
-    ctx.fillStyle = color;
-    ctx.fillText(label, screenX + offsetX, screenY + offsetY);
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, bgX, bgY);
     
-    // Obnovit transformaci
     ctx.restore();
   };
 
@@ -841,86 +850,7 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
     // Nakreslit mřížku
     drawGrid(bufferCtx);
     
-    // Nakreslit titulky pouze když jsou zapnuté
-    if (showCaptions) {
-      const isMobileView = canvasSize.width < 768;
-      
-      // Nakreslit nadpis na střed nahoře
-      bufferCtx.fillStyle = darkMode ? '#e5e7eb' : '#1f2937';
-      bufferCtx.font = isMobileView ? '600 20px Arial, sans-serif' : '600 28px Arial, sans-serif';
-      bufferCtx.textAlign = 'center';
-      bufferCtx.fillText('Konstrukce osy úsečky', canvasSize.width / 2, isMobileView ? 40 : 60);
-      
-      // Nakreslit popisek kroku
-      bufferCtx.font = isMobileView ? '400 13px Arial, sans-serif' : '400 16px Arial, sans-serif';
-      const descriptionText = steps[currentStep].description;
-      const textMetrics = bufferCtx.measureText(descriptionText);
-      const textWidth = textMetrics.width;
-      const textHeight = isMobileView ? 18 : 22;
-      const padding = isMobileView ? 12 : 16;
-      
-      // Pozice popisku - vyšší na mobilu kvůli panelu
-      const bottomMargin = isMobileView ? 180 : 120;
-      
-      // Na mobilu zalamovat text, pokud je moc dlouhý
-      if (isMobileView && textWidth > canvasSize.width - 40) {
-        const maxWidth = canvasSize.width - 40;
-        const words = descriptionText.split(' ');
-        const lines: string[] = [];
-        let currentLine = '';
-        
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          const testMetrics = bufferCtx.measureText(testLine);
-          
-          if (testMetrics.width > maxWidth && currentLine) {
-            lines.push(currentLine);
-            currentLine = word;
-          } else {
-            currentLine = testLine;
-          }
-        }
-        if (currentLine) {
-          lines.push(currentLine);
-        }
-        
-        // Pozadí pro víceřádkový text
-        const maxLineWidth = Math.max(...lines.map(line => bufferCtx.measureText(line).width));
-        const totalHeight = lines.length * (textHeight + 4);
-        const bgX = canvasSize.width / 2 - maxLineWidth / 2 - padding;
-        const bgY = canvasSize.height - bottomMargin - totalHeight - padding / 2;
-        const bgWidth = maxLineWidth + padding * 2;
-        const bgHeight = totalHeight + padding;
-        
-        bufferCtx.fillStyle = darkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-        bufferCtx.beginPath();
-        bufferCtx.roundRect(bgX, bgY, bgWidth, bgHeight, 8);
-        bufferCtx.fill();
-        
-        // Vykreslit každý řádek
-        bufferCtx.fillStyle = darkMode ? '#9ca3af' : '#4b5563';
-        lines.forEach((line, index) => {
-          const yPos = canvasSize.height - bottomMargin - totalHeight + index * (textHeight + 4) + textHeight;
-          bufferCtx.fillText(line, canvasSize.width / 2, yPos);
-        });
-      } else {
-        // Jednořádkový text (desktop nebo krátký text)
-        const bgX = canvasSize.width / 2 - textWidth / 2 - padding;
-        const bgY = canvasSize.height - bottomMargin - textHeight - padding / 2;
-        const bgWidth = textWidth + padding * 2;
-        const bgHeight = textHeight + padding;
-        
-        bufferCtx.fillStyle = darkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-        bufferCtx.beginPath();
-        bufferCtx.roundRect(bgX, bgY, bgWidth, bgHeight, 8);
-        bufferCtx.fill();
-        
-        bufferCtx.fillStyle = darkMode ? '#9ca3af' : '#4b5563';
-        bufferCtx.fillText(descriptionText, canvasSize.width / 2, canvasSize.height - bottomMargin);
-      }
-      
-      bufferCtx.textAlign = 'left';
-    }
+    // Titulky a popis se zobrazují v horním popupu (ne na canvasu)
     
     // Aplikovat transformace
     bufferCtx.translate(offset.x, offset.y);
@@ -1202,7 +1132,7 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
       
       // Vypočítat nový scale
       const scaleMultiplier = currentDistance / initialPinchDistance;
-      const newScale = Math.max(0.15, Math.min(2.25, initialPinchScale * scaleMultiplier));
+      const newScale = Math.max(0.2, Math.min(0.6, initialPinchScale * scaleMultiplier));
       
       // Vypočítat pozici středu pinche relativně k canvasu
       const centerX = currentCenter.x - rect.left;
@@ -1263,7 +1193,7 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.max(0.15, Math.min(2.25, scale * delta));
+    const newScale = Math.max(0.2, Math.min(0.6, scale * delta));
     
     // Získat pozici myši relativně k canvasu
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -1326,7 +1256,7 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
   return (
     <div className="size-full flex flex-col relative">
       {/* Canvas plátno */}
-      <div ref={containerRef} className={`flex-1 ${darkMode ? 'bg-[#111827]' : 'bg-[#f9fafb]'}`}>
+      <div ref={containerRef} className={`flex-1 ${darkMode ? 'bg-[#1a1b26]' : 'bg-white'}`}>
         <canvas
           ref={canvasRef}
           className="w-full h-full"
@@ -1346,34 +1276,93 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
         />
       </div>
       
+      {/* Krok info nahoře */}
+      <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-2xl shadow-lg max-w-2xl ${
+        darkMode ? 'bg-gray-900 border border-gray-800 text-[#c0caf5]' : 'bg-white border border-gray-200 text-gray-900'
+      }`} style={{ fontFamily: "var(--font-family, 'Fenomen Sans', sans-serif)", padding: '24px 40px' }}>
+        <div className={`text-base font-medium mb-3 ${darkMode ? 'text-[#565f89]' : 'text-gray-400'}`}>
+          Krok {currentStep + 1} / {steps.length}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold shrink-0" style={{ backgroundColor: stepNotations[currentStep]?.type === 'circle' ? '#f43f5e' : stepNotations[currentStep]?.type === 'segment' ? '#10b981' : stepNotations[currentStep]?.type === 'line' ? '#8b5cf6' : '#3b82f6', color: '#fff' }}>
+            {stepNotations[currentStep]?.type === 'circle' ? '○' : stepNotations[currentStep]?.type === 'segment' ? '—' : stepNotations[currentStep]?.type === 'line' ? '↔' : '•'}
+          </span>
+          <span className="text-xl font-medium" style={{ fontFamily: '"Times New Roman", Georgia, serif', fontStyle: 'italic' }}>
+            {currentStep + 1}. {stepNotations[currentStep]?.notation}
+          </span>
+        </div>
+        <div className={`text-base mt-2.5 ${darkMode ? 'text-[#565f89]' : 'text-gray-500'}`}>
+          {steps[currentStep]?.description}
+        </div>
+      </div>
+
       {/* Plovoucí ovládací panel dole */}
       <ConstructionControlPanel
         currentStep={currentStep}
         totalSteps={steps.length}
-        scale={scale}
         showCaptions={showCaptions}
         darkMode={darkMode}
-        isMobile={isMobile}
+        scale={scale}
         onStepChange={changeStep}
-        onPlayStep={handlePlayStep}
         onRestart={handleRestart}
-        onZoomChange={handleZoomChange}
         onToggleCaptions={() => setShowCaptions(!showCaptions)}
         onToggleDarkMode={() => onDarkModeChange(!darkMode)}
+        onZoomChange={(newScale: number) => {
+          const clampedScale = Math.max(0.2, Math.min(0.6, newScale));
+          const centerX = canvasSize.width / 2;
+          const centerY = canvasSize.height / 2;
+          const worldX = (centerX - offset.x) / scale;
+          const worldY = (centerY - offset.y) / scale;
+          setScale(clampedScale);
+          setOffset({
+            x: centerX - worldX * clampedScale,
+            y: centerY - worldY * clampedScale
+          });
+        }}
+      />
+
+      {/* Zápis konstrukce - sidebar */}
+      <ConstructionStepLog
+        steps={stepNotations}
+        currentStep={currentStep}
+        constructionTitle="Konstrukce osy úsečky"
+        darkMode={darkMode}
+        visible={showProtocol}
+        onClose={() => setShowProtocol(false)}
       />
 
       {/* Tlačítko zpět do menu - vlevo nahoře */}
       <button
         onClick={onBack}
-        className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg transition-colors ${
+        className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all ${
           darkMode
-            ? 'bg-[#374151] hover:bg-[#404c5e] text-gray-100 border border-gray-600'
-            : 'bg-white hover:bg-gray-50 border border-gray-200'
+            ? 'bg-[#1a1b26]/90 hover:bg-[#24283b] text-[#c0caf5] border border-[#2a2b3d] backdrop-blur-sm'
+            : 'bg-white/90 hover:bg-gray-50 border border-gray-200/60 backdrop-blur-sm'
         }`}
       >
         <ArrowLeft className="size-5" />
-        <span>Menu</span>
+        <span className="text-sm font-medium">Menu</span>
       </button>
+
+      {/* Zápis konstrukce - tlačítko vpravo nahoře */}
+      <div className={`absolute top-4 z-10 transition-all duration-300 ${showProtocol ? 'right-[576px]' : 'right-4'}`}>
+        <button
+          onClick={() => setShowProtocol(!showProtocol)}
+          className={`p-3 rounded-xl transition-all relative group/protocol ${
+            showProtocol
+              ? darkMode ? 'bg-[#7aa2f7] text-white' : 'bg-[#1e1b4b] text-white'
+              : darkMode ? 'bg-[#24283b] hover:bg-[#414868] text-[#c0caf5]' : 'bg-white/90 hover:bg-gray-50 text-gray-700 shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-200/60 backdrop-blur-sm'
+          }`}
+          title="Zápis konstrukce"
+        >
+          <FileText className="size-5" />
+          {!showProtocol && (
+            <div className="absolute right-0 top-full mt-2 px-3 py-1.5 bg-black/80 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/protocol:opacity-100 transition-opacity pointer-events-none">
+              Zápis konstrukce
+            </div>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

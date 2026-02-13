@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { 
-  ArrowLeft
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
 import { useIsMobile } from './ui/use-mobile';
 import { BigNumberInput } from './BigNumberInput';
 import { ConstructionControlPanel } from './ConstructionControlPanel';
+import { ConstructionStepLog, StepNotation } from './ConstructionStepLog';
 
 interface Point {
   x: number;
@@ -24,7 +26,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
   const [currentStep, setCurrentStep] = useState(0);
-  const [scale, setScale] = useState(isMobile ? 0.15 : 0.5);
+  const [scale, setScale] = useState(isMobile ? 0.2 : 0.4);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Point>({ x: 0, y: 0 });
@@ -32,6 +34,50 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
   const [animProgress, setAnimProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
   const [showCaptions, setShowCaptions] = useState(true);
+  const [showProtocol, setShowProtocol] = useState(false);
+  
+  const stepNotations: StepNotation[] = [
+    {
+      notation: 'AB',
+      description: 'Narýsuj základnu AB',
+      type: 'segment'
+    },
+    {
+      notation: '∠α = ...°',
+      description: 'Zadej úhel α při vrcholu A',
+      type: 'angle'
+    },
+    {
+      notation: 'paprsek z A',
+      description: 'Narýsuj paprsek z bodu A pod úhlem α',
+      type: 'line'
+    },
+    {
+      notation: '∠β = ...°',
+      description: 'Zadej úhel β při vrcholu B',
+      type: 'angle'
+    },
+    {
+      notation: 'paprsek z B',
+      description: 'Narýsuj paprsek z bodu B pod úhlem β',
+      type: 'line'
+    },
+    {
+      notation: 'C = paprsek z A ∩ paprsek z B',
+      description: 'Označ průsečík paprsků jako bod C',
+      type: 'point'
+    },
+    {
+      notation: 'AC, BC',
+      description: 'Dorýsuj strany AC a BC',
+      type: 'segment'
+    },
+    {
+      notation: 'ABC',
+      description: 'Opsat trojúhelník ABC',
+      type: 'segment'
+    }
+  ];
   
   const rulerImageRef = useRef<HTMLImageElement | null>(null);
   const [rulerLoaded, setRulerLoaded] = useState(false);
@@ -360,18 +406,21 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
   };
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    const gridSize = 20;
-    ctx.strokeStyle = darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(229, 231, 235, 0.5)';
+    const gridSize = 50 * scale;
+    ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 
-    for (let x = 0; x <= canvasSize.width; x += gridSize) {
+    const startX = offset.x % gridSize;
+    const startY = offset.y % gridSize;
+
+    for (let x = startX; x <= canvasSize.width; x += gridSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvasSize.height);
       ctx.stroke();
     }
 
-    for (let y = 0; y <= canvasSize.height; y += gridSize) {
+    for (let y = startY; y <= canvasSize.height; y += gridSize) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(canvasSize.width, y);
@@ -383,7 +432,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
     ctx: CanvasRenderingContext2D,
     p: Point,
     label: string,
-    color: string = '#000',
+    _color: string = '#000',
     offsetX: number = 12,
     offsetY: number = -12,
     dpr: number = 1
@@ -394,21 +443,24 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
     const screenX = p.x * scale + offset.x;
     const screenY = p.y * scale + offset.y;
     
-    ctx.font = '600 22px Arial, sans-serif';
+    ctx.font = 'bold 16px Inter, system-ui, sans-serif';
     const metrics = ctx.measureText(label);
     const textWidth = metrics.width;
+    const padding = 8;
     
     const bgX = screenX + offsetX + textWidth / 2;
     const bgY = screenY + offsetY - 8;
-    const bgRadius = Math.max(textWidth, 16) / 2 + 6;
+    const bgRadius = Math.max(textWidth, 16) / 2 + padding;
     
-    ctx.fillStyle = darkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(200, 200, 200, 0.35)';
+    ctx.fillStyle = '#3b82f6';
     ctx.beginPath();
     ctx.arc(bgX, bgY, bgRadius, 0, Math.PI * 2);
     ctx.fill();
     
-    ctx.fillStyle = color;
-    ctx.fillText(label, screenX + offsetX, screenY + offsetY);
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, bgX, bgY);
     
     ctx.restore();
   };
@@ -495,7 +547,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
     ctx.rotate(angle);
     
     const text = `${length}cm`;
-    ctx.font = '600 18px Arial, sans-serif';
+    ctx.font = '600 18px "Fenomen Sans", Arial, sans-serif';
     ctx.fillStyle = darkMode ? '#e5e7eb' : '#1f2937';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
@@ -685,7 +737,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
         const screenX = textX * scale + offset.x;
         const screenY = textY * scale + offset.y;
         
-        ctx.font = '400 12px Arial, sans-serif';
+        ctx.font = '400 12px "Fenomen Sans", Arial, sans-serif';
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -936,97 +988,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
     
     drawGrid(bufferCtx);
     
-    if (showCaptions) {
-      const isMobileView = canvasSize.width < 768;
-      
-      bufferCtx.fillStyle = darkMode ? '#e5e7eb' : '#1f2937';
-      bufferCtx.font = isMobileView ? '600 20px Arial, sans-serif' : '600 28px Arial, sans-serif';
-      bufferCtx.textAlign = 'center';
-      const title = sideAB 
-        ? `Trojúhelník z úhlů (AB=${sideAB}cm)`
-        : 'Trojúhelník z úhlů';
-      bufferCtx.fillText(title, canvasSize.width / 2, isMobileView ? 40 : 60);
-      
-      bufferCtx.font = isMobileView ? '400 13px Arial, sans-serif' : '400 16px Arial, sans-serif';
-      const descriptionText = stepInfo.description;
-      const textMetrics = bufferCtx.measureText(descriptionText);
-      const textWidth = textMetrics.width;
-      const textHeight = isMobileView ? 18 : 22;
-      const padding = isMobileView ? 12 : 16;
-      
-      const bottomMargin = isMobileView ? 180 : 120;
-      
-      if (isMobileView && textWidth > canvasSize.width - 40) {
-        const maxWidth = canvasSize.width - 40;
-        const words = descriptionText.split(' ');
-        const lines: string[] = [];
-        let currentLine = '';
-        
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          const testMetrics = bufferCtx.measureText(testLine);
-          
-          if (testMetrics.width > maxWidth && currentLine) {
-            lines.push(currentLine);
-            currentLine = word;
-          } else {
-            currentLine = testLine;
-          }
-        }
-        if (currentLine) {
-          lines.push(currentLine);
-        }
-        
-        const maxLineWidth = Math.max(...lines.map(line => bufferCtx.measureText(line).width));
-        const totalHeight = lines.length * (textHeight + 4);
-        const bgX = canvasSize.width / 2 - maxLineWidth / 2 - padding;
-        const bgY = canvasSize.height - bottomMargin - totalHeight - padding / 2;
-        const bgWidth = maxLineWidth + padding * 2;
-        const bgHeight = totalHeight + padding;
-        
-        const bgColor = stepInfo.error 
-          ? (darkMode ? 'rgba(220, 38, 38, 0.2)' : 'rgba(254, 202, 202, 0.95)')
-          : (darkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)');
-        
-        bufferCtx.fillStyle = bgColor;
-        bufferCtx.beginPath();
-        bufferCtx.roundRect(bgX, bgY, bgWidth, bgHeight, 8);
-        bufferCtx.fill();
-        
-        const textColor = stepInfo.error
-          ? (darkMode ? '#fca5a5' : '#dc2626')
-          : (darkMode ? '#9ca3af' : '#4b5563');
-        
-        bufferCtx.fillStyle = textColor;
-        lines.forEach((line, index) => {
-          const yPos = canvasSize.height - bottomMargin - totalHeight + index * (textHeight + 4) + textHeight;
-          bufferCtx.fillText(line, canvasSize.width / 2, yPos);
-        });
-      } else {
-        const bgX = canvasSize.width / 2 - textWidth / 2 - padding;
-        const bgY = canvasSize.height - bottomMargin - textHeight - padding / 2;
-        const bgWidth = textWidth + padding * 2;
-        const bgHeight = textHeight + padding;
-        
-        const bgColor = stepInfo.error 
-          ? (darkMode ? 'rgba(220, 38, 38, 0.2)' : 'rgba(254, 202, 202, 0.95)')
-          : (darkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)');
-        
-        bufferCtx.fillStyle = bgColor;
-        bufferCtx.beginPath();
-        bufferCtx.roundRect(bgX, bgY, bgWidth, bgHeight, 8);
-        bufferCtx.fill();
-        
-        const textColor = stepInfo.error
-          ? (darkMode ? '#fca5a5' : '#dc2626')
-          : (darkMode ? '#9ca3af' : '#4b5563');
-        
-        bufferCtx.fillStyle = textColor;
-        bufferCtx.fillText(descriptionText, canvasSize.width / 2, canvasSize.height - bottomMargin);
-      }
-      
-      bufferCtx.textAlign = 'left';
-    }
+    // Titulky a popis se zobrazují v horním popupu (ne na canvasu)
     
     bufferCtx.translate(offset.x, offset.y);
     bufferCtx.scale(scale, scale);
@@ -1097,7 +1059,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
             const screenX = textX * scale + offset.x;
             const screenY = textY * scale + offset.y;
             
-            bufferCtx.font = '600 20px Arial, sans-serif';
+            bufferCtx.font = '600 20px "Fenomen Sans", Arial, sans-serif';
             bufferCtx.fillStyle = angleColor;
             bufferCtx.textAlign = 'center';
             bufferCtx.textBaseline = 'middle';
@@ -1129,7 +1091,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
           const screenX = textX * scale + offset.x;
           const screenY = textY * scale + offset.y;
           
-          bufferCtx.font = '600 20px Arial, sans-serif';
+          bufferCtx.font = '600 20px "Fenomen Sans", Arial, sans-serif';
           bufferCtx.fillStyle = angleColor;
           bufferCtx.textAlign = 'center';
           bufferCtx.textBaseline = 'middle';
@@ -1195,7 +1157,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
             const screenX = textX * scale + offset.x;
             const screenY = textY * scale + offset.y;
             
-            bufferCtx.font = '600 20px Arial, sans-serif';
+            bufferCtx.font = '600 20px "Fenomen Sans", Arial, sans-serif';
             bufferCtx.fillStyle = angleColor;
             bufferCtx.textAlign = 'center';
             bufferCtx.textBaseline = 'middle';
@@ -1228,7 +1190,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
           const screenX = textX * scale + offset.x;
           const screenY = textY * scale + offset.y;
           
-          bufferCtx.font = '600 20px Arial, sans-serif';
+          bufferCtx.font = '600 20px "Fenomen Sans", Arial, sans-serif';
           bufferCtx.fillStyle = angleColor;
           bufferCtx.textAlign = 'center';
           bufferCtx.textBaseline = 'middle';
@@ -1394,7 +1356,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
           const screenX = textX * scale + offset.x;
           const screenY = textY * scale + offset.y;
           
-          bufferCtx.font = '600 20px Arial, sans-serif';
+          bufferCtx.font = '600 20px "Fenomen Sans", Arial, sans-serif';
           bufferCtx.fillStyle = angleColor;
           bufferCtx.textAlign = 'center';
           bufferCtx.textBaseline = 'middle';
@@ -1635,7 +1597,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
       const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
       
       const scaleMultiplier = currentDistance / initialPinchDistance;
-      const newScale = Math.max(0.15, Math.min(2.25, initialPinchScale * scaleMultiplier));
+      const newScale = Math.max(0.2, Math.min(0.6, initialPinchScale * scaleMultiplier));
       
       const centerX = currentCenter.x - rect.left;
       const centerY = currentCenter.y - rect.top;
@@ -1697,7 +1659,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.max(0.15, Math.min(2.25, scale * delta));
+    const newScale = Math.max(0.2, Math.min(0.6, scale * delta));
     
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -1774,7 +1736,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
 
   return (
     <div className="size-full flex flex-col relative">
-      <div ref={containerRef} className={`flex-1 ${darkMode ? 'bg-[#111827]' : 'bg-[#f9fafb]'}`}>
+      <div ref={containerRef} className={`flex-1 ${darkMode ? 'bg-[#1a1b26]' : 'bg-white'}`}>
         <canvas
           ref={canvasRef}
           className="w-full h-full"
@@ -1796,15 +1758,35 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
       
       <button
         onClick={onBack}
-        className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg transition-colors ${
+        className={`absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-all ${
           darkMode
-            ? 'bg-[#374151] hover:bg-[#404c5e] text-gray-100 border border-gray-600'
-            : 'bg-white hover:bg-gray-50 border border-gray-200'
+            ? 'bg-[#1a1b26]/90 hover:bg-[#24283b] text-[#c0caf5] border border-[#2a2b3d] backdrop-blur-sm'
+            : 'bg-white/90 hover:bg-gray-50 border border-gray-200/60 backdrop-blur-sm'
         }`}
       >
         <ArrowLeft className="size-5" />
-        <span>Menu</span>
+        <span className="text-sm font-medium">Menu</span>
       </button>
+
+      {/* Zápis konstrukce - tlačítko vpravo nahoře */}
+      <div className={`absolute top-4 z-10 transition-all duration-300 ${showProtocol ? 'right-[576px]' : 'right-4'}`}>
+        <button
+          onClick={() => setShowProtocol(!showProtocol)}
+          className={`p-3 rounded-xl transition-all relative group/protocol ${
+            showProtocol
+              ? darkMode ? 'bg-[#7aa2f7] text-white' : 'bg-[#1e1b4b] text-white'
+              : darkMode ? 'bg-[#24283b] hover:bg-[#414868] text-[#c0caf5]' : 'bg-white/90 hover:bg-gray-50 text-gray-700 shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-200/60 backdrop-blur-sm'
+          }`}
+          title="Zápis konstrukce"
+        >
+          <FileText className="size-5" />
+          {!showProtocol && (
+            <div className="absolute right-0 top-full mt-2 px-3 py-1.5 bg-black/80 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/protocol:opacity-100 transition-opacity pointer-events-none">
+              Zápis konstrukce
+            </div>
+          )}
+        </button>
+      </div>
       
       {stepInfo.needsInput && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -1859,19 +1841,56 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
         </div>
       )}
       
+      {/* Krok info nahoře */}
+      <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-2xl shadow-lg max-w-2xl ${
+        darkMode ? 'bg-gray-900 border border-gray-800 text-[#c0caf5]' : 'bg-white border border-gray-200 text-gray-900'
+      }`} style={{ fontFamily: "var(--font-family, 'Fenomen Sans', sans-serif)", padding: '24px 40px' }}>
+        <div className={`text-base font-medium mb-3 ${darkMode ? 'text-[#565f89]' : 'text-gray-400'}`}>
+          Krok {currentStep + 1} / {stepNotations.length}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold shrink-0" style={{ backgroundColor: stepNotations[currentStep]?.type === 'circle' ? '#f43f5e' : stepNotations[currentStep]?.type === 'segment' ? '#10b981' : stepNotations[currentStep]?.type === 'line' ? '#8b5cf6' : stepNotations[currentStep]?.type === 'angle' ? '#f97316' : '#3b82f6', color: '#fff' }}>
+            {stepNotations[currentStep]?.type === 'circle' ? '○' : stepNotations[currentStep]?.type === 'segment' ? '—' : stepNotations[currentStep]?.type === 'line' ? '↔' : stepNotations[currentStep]?.type === 'angle' ? '∠' : '•'}
+          </span>
+          <span className="text-xl font-medium" style={{ fontFamily: '"Times New Roman", Georgia, serif', fontStyle: 'italic' }}>
+            {currentStep + 1}. {stepNotations[currentStep]?.notation}
+          </span>
+        </div>
+        <div className={`text-base mt-2.5 ${darkMode ? 'text-[#565f89]' : 'text-gray-500'}`}>
+          {stepInfo.description}
+        </div>
+      </div>
+
       <ConstructionControlPanel
         currentStep={currentStep}
-        totalSteps={8}
-        scale={scale}
+        totalSteps={stepNotations.length}
         showCaptions={showCaptions}
         darkMode={darkMode}
-        isMobile={isMobile}
+        scale={scale}
         onStepChange={changeStep}
-        onPlayStep={handlePlayStep}
         onRestart={handleRestart}
-        onZoomChange={handleZoomChange}
         onToggleCaptions={() => setShowCaptions(!showCaptions)}
         onToggleDarkMode={() => onDarkModeChange(!darkMode)}
+        onZoomChange={(newScale: number) => {
+          const clampedScale = Math.max(0.2, Math.min(0.6, newScale));
+          const centerX = canvasSize.width / 2;
+          const centerY = canvasSize.height / 2;
+          const worldX = (centerX - offset.x) / scale;
+          const worldY = (centerY - offset.y) / scale;
+          setScale(clampedScale);
+          setOffset({
+            x: centerX - worldX * clampedScale,
+            y: centerY - worldY * clampedScale
+          });
+        }}
+      />
+      <ConstructionStepLog
+        steps={stepNotations}
+        currentStep={currentStep}
+        constructionTitle="Konstrukce trojúhelníku (SUS)"
+        darkMode={darkMode}
+        visible={showProtocol}
+        onClose={() => setShowProtocol(false)}
       />
     </div>
   );

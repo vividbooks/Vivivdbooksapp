@@ -123,11 +123,12 @@ export function BigNumberInput({
                 inputMode="numeric"
                 value={digit}
                 onChange={(e) => handleDigitChange(index, e.target.value.slice(-1))}
-                className={`w-24 h-32 text-center text-[100px] leading-none rounded-2xl border-4 transition-all ${
+                className={`w-24 h-32 text-center leading-none rounded-2xl border-4 transition-all ${
                   darkMode
                     ? 'bg-gray-700 border-gray-500 text-blue-400 focus:border-blue-400'
                     : 'bg-white border-gray-300 text-blue-600 focus:border-blue-500'
                 } focus:outline-none`}
+                style={{ fontSize: '100px' }}
                 maxLength={1}
               />
               
