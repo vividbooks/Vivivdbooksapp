@@ -3960,7 +3960,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       {/* CANVAS */}
       <div 
         ref={containerRef} 
-        className="absolute inset-0 touch-none"
+        className="absolute inset-0 touch-none z-0"
         style={{ cursor: getContainerCursor() }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMoveWrapper}
@@ -3980,7 +3980,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
       {/* TOP RIGHT CORNER: Undo, Redo, Record, Zápis konstrukce */}
       {!recordingState.showPlayer && (
-      <div className={`absolute top-4 z-10 flex gap-2 transition-all duration-300 ${showConstructionPanel ? 'right-[386px]' : 'right-4'}`}>
+      <div className={`absolute top-4 z-30 flex gap-2 transition-all duration-300 ${showConstructionPanel ? 'right-[386px]' : 'right-4'}`} onTouchStart={(e) => e.stopPropagation()}>
         {/* Undo */}
         <button
           onClick={handleUndo}
@@ -4067,7 +4067,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
       {/* TOOLBAR - LEFT SIDE (NEW DESIGN) */}
       {!recordingState.showPlayer && !circleInput.visible && !angleInput.visible && !segmentInput.visible && (
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 pointer-events-auto" style={{ touchAction: 'auto' }}>
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 pointer-events-auto" style={{ touchAction: 'auto' }} onTouchStart={(e) => e.stopPropagation()}>
          <div className="bg-[#F2F2F2] rounded-full p-2 flex flex-col items-center shadow-sm w-[72px] py-8">
             {/* Tlačítko Zpět */}
             <button
@@ -4096,13 +4096,25 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                 return (
                     <div key={group.id} className="relative group/tool">
                         <button
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 if (group.tools.length === 1) {
                                     setActiveTool(group.tools[0].id as ToolType);
                                     setSelectedPointId(null);
                                     setActiveGroup(null);
                                 } else {
                                     // Toggle submenu (pro tablet/touch i desktop)
+                                    setActiveGroup(prev => prev === group.id ? null : group.id);
+                                }
+                            }}
+                            onTouchEnd={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (group.tools.length === 1) {
+                                    setActiveTool(group.tools[0].id as ToolType);
+                                    setSelectedPointId(null);
+                                    setActiveGroup(null);
+                                } else {
                                     setActiveGroup(prev => prev === group.id ? null : group.id);
                                 }
                             }}
@@ -4131,6 +4143,13 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                                         <button
                                             key={tool.id}
                                             onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveTool(tool.id as ToolType);
+                                                setSelectedPointId(null);
+                                                setActiveGroup(null);
+                                            }}
+                                            onTouchEnd={(e) => {
+                                                e.preventDefault();
                                                 e.stopPropagation();
                                                 setActiveTool(tool.id as ToolType);
                                                 setSelectedPointId(null);
@@ -4187,6 +4206,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                          <div key={group.id} className="relative group w-full flex justify-center transition-all duration-300">
                              <button
                                  onClick={() => setShowMeasurements(!showMeasurements)}
+                                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowMeasurements(!showMeasurements); }}
                                  className={`w-12 h-12 relative flex items-center justify-center rounded-full transition-transform hover:scale-105 overflow-visible z-10 border-2 group/measure ${
                                      showMeasurements 
                                         ? 'bg-[#1e1b4b] border-[#1e1b4b] text-white' 
@@ -4207,9 +4227,18 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                     <div key={group.id} className={`relative group w-full flex justify-center transition-all duration-300 ${isOther ? 'opacity-30 grayscale hover:opacity-60 hover:grayscale-0 cursor-pointer' : ''}`}>
                          {/* Main Button */}
                          <button
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 if (isOther || group.tools.length === 1) {
-                                    // Greyed-out tool or single-tool group: activate tool with full state reset
+                                    handleToolMenuClick(group.tools[0].id, setCircleInput, setActiveTool, setSelectedPointId, setActiveGroup, setSegmentInput, setPerpTabletState, isTabletMode, setCircleTabletState);
+                                } else {
+                                    setActiveGroup(isMenuOpen ? null : group.id);
+                                }
+                            }}
+                            onTouchEnd={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (isOther || group.tools.length === 1) {
                                     handleToolMenuClick(group.tools[0].id, setCircleInput, setActiveTool, setSelectedPointId, setActiveGroup, setSegmentInput, setPerpTabletState, isTabletMode, setCircleTabletState);
                                 } else {
                                     setActiveGroup(isMenuOpen ? null : group.id);
@@ -4242,6 +4271,11 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                                  <button
                                     key={tool.id}
                                     onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToolMenuClick(tool.id, setCircleInput, setActiveTool, setSelectedPointId, setActiveGroup, setSegmentInput, setPerpTabletState, isTabletMode, setCircleTabletState);
+                                    }}
+                                    onTouchEnd={(e) => {
+                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleToolMenuClick(tool.id, setCircleInput, setActiveTool, setSelectedPointId, setActiveGroup, setSegmentInput, setPerpTabletState, isTabletMode, setCircleTabletState);
                                     }}
