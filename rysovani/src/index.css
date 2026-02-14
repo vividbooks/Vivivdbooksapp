@@ -79,39 +79,39 @@
   :root, :host {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --color-red-50: oklch(.971 .013 17.38);
-    --color-red-200: oklch(.885 .062 18.334);
-    --color-red-300: oklch(.808 .114 19.571);
-    --color-red-400: oklch(.704 .191 22.216);
-    --color-red-500: oklch(.637 .237 25.331);
-    --color-red-600: oklch(.577 .245 27.325);
-    --color-red-700: oklch(.505 .213 27.518);
-    --color-red-900: oklch(.396 .141 25.723);
-    --color-orange-300: oklch(.837 .128 66.29);
-    --color-orange-400: oklch(.75 .183 55.934);
-    --color-orange-500: oklch(.705 .213 47.604);
-    --color-green-600: oklch(.627 .194 149.214);
-    --color-emerald-500: oklch(.696 .17 162.48);
-    --color-teal-600: oklch(.6 .118 184.704);
-    --color-blue-50: oklch(.97 .014 254.604);
-    --color-blue-100: oklch(.932 .032 255.585);
-    --color-blue-300: oklch(.809 .105 251.813);
-    --color-blue-400: oklch(.707 .165 254.624);
-    --color-blue-500: oklch(.623 .214 259.815);
-    --color-blue-600: oklch(.546 .245 262.881);
-    --color-blue-700: oklch(.488 .243 264.376);
-    --color-blue-900: oklch(.379 .146 265.522);
-    --color-purple-600: oklch(.558 .288 302.321);
-    --color-gray-50: oklch(.985 .002 247.839);
-    --color-gray-100: oklch(.967 .003 264.542);
-    --color-gray-200: oklch(.928 .006 264.531);
-    --color-gray-300: oklch(.872 .01 258.338);
-    --color-gray-400: oklch(.707 .022 261.325);
-    --color-gray-500: oklch(.551 .027 264.364);
-    --color-gray-600: oklch(.446 .03 256.802);
-    --color-gray-700: oklch(.373 .034 259.733);
-    --color-gray-800: oklch(.278 .033 256.848);
-    --color-gray-900: oklch(.21 .034 264.665);
+    --color-red-50: color(display-p3 .988669 .951204 .950419);
+    --color-red-200: color(display-p3 .969562 .798149 .794299);
+    --color-red-300: color(display-p3 .956922 .651886 .645122);
+    --color-red-400: color(display-p3 .933534 .431676 .423491);
+    --color-red-500: color(display-p3 .903738 .262579 .253307);
+    --color-red-600: color(display-p3 .830323 .140383 .133196);
+    --color-red-700: color(display-p3 .692737 .116232 .104679);
+    --color-red-900: color(display-p3 .466906 .133198 .12139);
+    --color-orange-300: color(display-p3 .96801 .734346 .464159);
+    --color-orange-400: color(display-p3 .950192 .561807 .211017);
+    --color-orange-500: color(display-p3 .946589 .449788 .0757345);
+    --color-green-600: color(display-p3 .243882 .640824 .294808);
+    --color-emerald-500: color(display-p3 .267113 .726847 .508397);
+    --color-teal-600: color(display-p3 .207114 .579584 .53668);
+    --color-blue-50: color(display-p3 .941826 .963151 .995385);
+    --color-blue-100: color(display-p3 .869214 .915931 .989622);
+    --color-blue-300: color(display-p3 .602559 .767214 .993938);
+    --color-blue-400: color(display-p3 .397443 .62813 .992116);
+    --color-blue-500: color(display-p3 .266422 .491219 .988624);
+    --color-blue-600: color(display-p3 .174493 .358974 .950247);
+    --color-blue-700: color(display-p3 .1379 .274983 .867624);
+    --color-blue-900: color(display-p3 .136395 .219428 .537145);
+    --color-purple-600: color(display-p3 .546729 .130167 .94439);
+    --color-gray-50: color(display-p3 .977213 .98084 .985102);
+    --color-gray-100: color(display-p3 .953567 .956796 .964321);
+    --color-gray-200: color(display-p3 .899787 .906171 .92106);
+    --color-gray-300: color(display-p3 .822033 .835264 .858521);
+    --color-gray-400: color(display-p3 .605734 .630385 .680158);
+    --color-gray-500: color(display-p3 .421287 .446085 .504784);
+    --color-gray-600: color(display-p3 .297358 .332176 .39043);
+    --color-gray-700: color(display-p3 .219968 .253721 .318679);
+    --color-gray-800: color(display-p3 .125854 .159497 .216835);
+    --color-gray-900: color(display-p3 .070423 .0928982 .151928);
     --color-black: #000;
     --color-white: #fff;
     --spacing: .25rem;
@@ -1506,7 +1506,7 @@
   }
 
   .border-blue-300\/60 {
-    border-color: color-mix(in srgb, oklch(.809 .105 251.813) 60%, transparent);
+    border-color: #90c5ff99;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -1618,7 +1618,7 @@
   }
 
   .bg-\[\#7aa2f7\]\/20 {
-    background-color: oklab(71.8977% -.0133505 -.131483 / .2);
+    background-color: color(display-p3 .51084 .63087 .943553 / .2);
   }
 
   .bg-\[\#565f89\] {
@@ -1634,11 +1634,11 @@
   }
 
   .bg-\[\#24283b\]\/40 {
-    background-color: oklab(28.1938% .00293933 -.0353891 / .4);
+    background-color: color(display-p3 .144088 .156368 .225628 / .4);
   }
 
   .bg-\[\#24283b\]\/95 {
-    background-color: oklab(28.1938% .00293933 -.0353891 / .95);
+    background-color: color(display-p3 .144088 .156368 .225628 / .95);
   }
 
   .bg-\[\#111827\] {
@@ -1698,7 +1698,7 @@
   }
 
   .bg-blue-50\/50 {
-    background-color: color-mix(in srgb, oklch(.97 .014 254.604) 50%, transparent);
+    background-color: #eff6ff80;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -1720,7 +1720,7 @@
   }
 
   .bg-blue-900\/50 {
-    background-color: color-mix(in srgb, oklch(.379 .146 265.522) 50%, transparent);
+    background-color: #1c398e80;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -1766,7 +1766,7 @@
   }
 
   .bg-gray-700\/90 {
-    background-color: color-mix(in srgb, oklch(.373 .034 259.733) 90%, transparent);
+    background-color: #364153e6;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -1816,7 +1816,7 @@
   }
 
   .bg-red-500\/20 {
-    background-color: color-mix(in srgb, oklch(.637 .237 25.331) 20%, transparent);
+    background-color: #fb2c3633;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -1826,7 +1826,7 @@
   }
 
   .bg-red-900\/30 {
-    background-color: color-mix(in srgb, oklch(.396 .141 25.723) 30%, transparent);
+    background-color: #82181a4d;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -1850,7 +1850,7 @@
   }
 
   .bg-gradient-to-r {
-    --tw-gradient-position: to right in oklab;
+    --tw-gradient-position: to right;
     background-image: linear-gradient(var(--tw-gradient-stops));
   }
 
@@ -2390,7 +2390,7 @@
   }
 
   .shadow-blue-500\/30 {
-    --tw-shadow-color: color-mix(in srgb, oklch(.623 .214 259.815) 30%, transparent);
+    --tw-shadow-color: #3080ff4d;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -2400,7 +2400,7 @@
   }
 
   .shadow-blue-500\/50 {
-    --tw-shadow-color: color-mix(in srgb, oklch(.623 .214 259.815) 50%, transparent);
+    --tw-shadow-color: #3080ff80;
   }
 
   @supports (color: color-mix(in lab, red, red)) {
@@ -2624,7 +2624,7 @@
 
   @media (hover: hover) {
     .hover\:bg-\[\#7aa2f7\]\/80:hover {
-      background-color: oklab(71.8977% -.0133505 -.131483 / .8);
+      background-color: color(display-p3 .51084 .63087 .943553 / .8);
     }
   }
 
@@ -2648,7 +2648,7 @@
 
   @media (hover: hover) {
     .hover\:bg-\[\#24283b\]\/60:hover {
-      background-color: oklab(28.1938% .00293933 -.0353891 / .6);
+      background-color: color(display-p3 .144088 .156368 .225628 / .6);
     }
   }
 
@@ -3003,14 +3003,14 @@
   --font-family: "Fenomen Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-size: 16px;
   --background: #fff;
-  --foreground: oklch(.145 0 0);
+  --foreground: color(display-p3 .0393882 .0393882 .0393882);
   --card: #fff;
-  --card-foreground: oklch(.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(.145 0 0);
+  --card-foreground: color(display-p3 .0393882 .0393882 .0393882);
+  --popover: color(display-p3 1 1 1);
+  --popover-foreground: color(display-p3 .0393882 .0393882 .0393882);
   --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(.95 .0058 264.53);
+  --primary-foreground: color(display-p3 1 1 1);
+  --secondary: color(display-p3 .928517 .934725 .949203);
   --secondary-foreground: #030213;
   --muted: #ececf0;
   --muted-foreground: #717182;
@@ -3024,21 +3024,21 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(.708 0 0);
-  --chart-1: oklch(.646 .222 41.116);
-  --chart-2: oklch(.6 .118 184.704);
-  --chart-3: oklch(.398 .07 227.392);
-  --chart-4: oklch(.828 .189 84.429);
-  --chart-5: oklch(.769 .188 70.08);
+  --ring: color(display-p3 .630163 .630163 .630163);
+  --chart-1: color(display-p3 .887467 .341665 .0219962);
+  --chart-2: color(display-p3 .207114 .579584 .53668);
+  --chart-3: color(display-p3 .142586 .302008 .385094);
+  --chart-4: color(display-p3 .959186 .738519 .118268);
+  --chart-5: color(display-p3 .93994 .620584 .0585367);
   --radius: .625rem;
-  --sidebar: oklch(.985 0 0);
-  --sidebar-foreground: oklch(.145 0 0);
+  --sidebar: color(display-p3 .980256 .980256 .980256);
+  --sidebar-foreground: color(display-p3 .0393882 .0393882 .0393882);
   --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(.985 0 0);
-  --sidebar-accent: oklch(.97 0 0);
-  --sidebar-accent-foreground: oklch(.205 0 0);
-  --sidebar-border: oklch(.922 0 0);
-  --sidebar-ring: oklch(.708 0 0);
+  --sidebar-primary-foreground: color(display-p3 .980256 .980256 .980256);
+  --sidebar-accent: color(display-p3 .960587 .960587 .960587);
+  --sidebar-accent-foreground: color(display-p3 .0905274 .0905274 .0905274);
+  --sidebar-border: color(display-p3 .898161 .898161 .898161);
+  --sidebar-ring: color(display-p3 .630163 .630163 .630163);
 }
 
 .dark {

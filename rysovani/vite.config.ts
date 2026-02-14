@@ -5,6 +5,17 @@
 
   export default defineConfig({
     plugins: [react()],
+    css: {
+      transformer: 'lightningcss',
+      lightningcss: {
+        targets: {
+          safari: (14 << 16),
+          ios_saf: (14 << 16),
+          chrome: (90 << 16),
+          firefox: (90 << 16),
+        },
+      },
+    },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
@@ -55,8 +66,9 @@
       },
     },
     build: {
-      target: 'esnext',
+      target: ['es2020', 'safari14'],
       outDir: 'build',
+      cssMinify: 'lightningcss',
     },
     server: {
       port: 3001,

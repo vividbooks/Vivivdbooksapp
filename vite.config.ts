@@ -7,6 +7,17 @@
     // Use relative base so built HTML works when opened from build/ or deployed to any path (e.g. GitHub Pages)
     base: '/geometry-app/',
     plugins: [react()],
+    css: {
+      transformer: 'lightningcss',
+      lightningcss: {
+        targets: {
+          safari: (14 << 16),
+          ios_saf: (14 << 16),
+          chrome: (90 << 16),
+          firefox: (90 << 16),
+        },
+      },
+    },
     resolve: {
       // Force single copy of React for all imports (including rysovani/)
       dedupe: ['react', 'react-dom', 'sonner', 'lucide-react'],
@@ -60,8 +71,9 @@
       },
     },
     build: {
-      target: 'esnext',
+      target: ['es2020', 'safari14'],
       outDir: 'docs', // GitHub Pages: set "Source" to "Deploy from a branch" → branch: main, folder: /docs
+      cssMinify: 'lightningcss',
     },
     server: {
       port: 3000,

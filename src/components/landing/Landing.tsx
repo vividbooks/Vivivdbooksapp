@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { HeroSection } from './HeroSection';
 import { ObjectCard } from './ObjectCard';
 import { ExerciseTile } from './ExerciseTile';
 import { objects } from '../../data/objects';
@@ -475,12 +474,28 @@ function ConstructionCard({ item }: { item: ConstructionItem }) {
 
 /* ── Main Landing ── */
 
-export function Landing() {
+export type LandingMode = 'rysovani-app' | 'telesa-app';
+
+const MODE_CONFIG: Record<LandingMode, { title: string; filters: ViewFilter[]; defaultFilter: ViewFilter }> = {
+  'rysovani-app': {
+    title: 'Rýsování a konstrukce',
+    filters: ['rysovani', 'konstrukce'],
+    defaultFilter: 'rysovani',
+  },
+  'telesa-app': {
+    title: 'Tělesa, útvary a cvičení',
+    filters: ['telesa', 'rovinne', 'cviceni'],
+    defaultFilter: 'telesa',
+  },
+};
+
+export function Landing({ mode }: { mode: LandingMode }) {
   const [searchParams] = useSearchParams();
+  const config = MODE_CONFIG[mode];
   const tabFromUrl = searchParams.get('tab');
-  const initialTab = (tabFromUrl && TAB_ORDER.includes(tabFromUrl as ViewFilter))
+  const initialTab = (tabFromUrl && config.filters.includes(tabFromUrl as ViewFilter))
     ? tabFromUrl as ViewFilter
-    : 'rysovani';
+    : config.defaultFilter;
   const [activeFilter, setActiveFilter] = useState<ViewFilter>(initialTab);
 
   // Cvičení sub-filters
@@ -497,24 +512,48 @@ export function Landing() {
 
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
-      <HeroSection />
 
-      {/* Kategorie */}
+      {/* Horní lišta: Název + Filtry */}
       <div
-        className="flex flex-wrap gap-3 justify-center"
-        style={{ marginTop: '40px', marginBottom: '20px', padding: '0 16px' }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          padding: '24px 24px 0',
+          maxWidth: '1320px',
+          margin: '0 auto',
+        }}
       >
-        {TAB_ORDER.map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setActiveFilter(f)}
-            onTouchEnd={(e) => { e.preventDefault(); setActiveFilter(f); }}
-            style={filterBtnStyle(f, activeFilter)}
-          >
-            {HEADING_MAP[f]}
-          </button>
-        ))}
+        {/* Název aplikace */}
+        <h1
+          style={{
+            fontFamily: "'Fenomen Sans', sans-serif",
+            fontSize: '28px',
+            fontWeight: 600,
+            color: '#09056f',
+            letterSpacing: '-0.01em',
+            whiteSpace: 'nowrap',
+            marginRight: '8px',
+          }}
+        >
+          {config.title}
+        </h1>
+
+        {/* Filtry (bobánky) */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+          {config.filters.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setActiveFilter(f)}
+              onTouchEnd={(e) => { e.preventDefault(); setActiveFilter(f); }}
+              style={filterBtnStyle(f, activeFilter)}
+            >
+              {HEADING_MAP[f]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Dlaždice */}
@@ -526,7 +565,7 @@ export function Landing() {
             fontWeight: 600,
             color: '#09056f',
             marginBottom: '28px',
-            textAlign: 'center',
+            textAlign: 'left',
             letterSpacing: '-0.02em',
           }}
         >
@@ -535,7 +574,7 @@ export function Landing() {
 
         {/* Rýsování – Volné rýsování (Tabule + Počítač) */}
         {activeFilter === 'rysovani' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', maxWidth: '660px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', maxWidth: '660px' }}>
             {drawingItems.map((item) => (
               <DrawingCard key={item.id} item={item} />
             ))}

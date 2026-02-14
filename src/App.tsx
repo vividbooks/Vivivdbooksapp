@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { Crossroads } from './components/landing/Crossroads';
 import { Landing } from './components/landing/Landing';
 import { CviceniPage } from './components/landing/CviceniPage';
 import { CviceniSetupPage } from './components/landing/CviceniSetupPage';
@@ -21,7 +22,9 @@ export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Crossroads />} />
+        <Route path="/rysovani-app" element={<Landing mode="rysovani-app" />} />
+        <Route path="/telesa-app" element={<Landing mode="telesa-app" />} />
         <Route path="/rysovani" element={<RysovaniPage />} />
         <Route path="/tutorial/:tutorialId" element={<TutorialPage />} />
         <Route path="/cviceni" element={<CviceniPage />} />
