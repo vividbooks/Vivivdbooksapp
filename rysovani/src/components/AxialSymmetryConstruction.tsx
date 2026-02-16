@@ -1223,6 +1223,7 @@ export function AxialSymmetryConstruction({ onBack, darkMode, onDarkModeChange }
       renderToBuffer(bufferCtx, animProgress);
     }
 
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     ctx.fillStyle = darkMode ? '#1a1b26' : '#ffffff';

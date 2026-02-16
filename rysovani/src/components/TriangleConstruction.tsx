@@ -904,6 +904,7 @@ export function TriangleConstruction({ onBack, darkMode, onDarkModeChange, custo
 
     renderToBuffer(bufferCtx, animProgress);
 
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const fadeInAlpha = animProgress < 0.05 ? animProgress / 0.05 : 1;

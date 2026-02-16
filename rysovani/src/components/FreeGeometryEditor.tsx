@@ -2437,7 +2437,12 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         }
       }
       
-      renderCanvas();
+      try {
+        renderCanvas();
+      } catch (e) {
+        // Prevent rendering errors from killing the animation loop
+        console.warn('Canvas render error:', e);
+      }
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -2462,6 +2467,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       canvas.height = canvasSize.height * dpr;
     }
     
+    // Reset transform to identity before clearing (prevents corruption from previous frame errors)
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     ctx.save();
@@ -3499,37 +3506,52 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   
   const drawMeasurement = (ctx: CanvasRenderingContext2D, x: number, y: number, text: string, angle?: number) => {
     ctx.save();
-    ctx.font = 'bold 14px sans-serif';
-    const padding = 5;
-    const metrics = ctx.measureText(text);
-    const width = metrics.width + padding * 2;
-    const height = 18;
-    
-    // Rotace kolem stredu popisku
-    if (angle !== undefined) {
-      ctx.translate(x, y);
-      let drawAngle = angle;
-      if (drawAngle > Math.PI / 2) drawAngle -= Math.PI;
-      if (drawAngle < -Math.PI / 2) drawAngle += Math.PI;
-      ctx.rotate(drawAngle);
-      ctx.translate(-x, -y);
-    }
-    
-    // Background pill
-    ctx.beginPath();
-    ctx.roundRect(x - width/2, y - height/2, width, height, 4);
-    ctx.fillStyle = darkMode ? 'rgba(36, 40, 59, 0.95)' : 'rgba(255, 255, 255, 0.9)';
-    ctx.fill();
-    ctx.strokeStyle = darkMode ? '#7d6bc2' : '#d1d5db';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    try {
+      ctx.font = 'bold 14px sans-serif';
+      const padding = 5;
+      const metrics = ctx.measureText(text);
+      const width = metrics.width + padding * 2;
+      const height = 18;
+      
+      // Rotace kolem stredu popisku
+      if (angle !== undefined) {
+        ctx.translate(x, y);
+        let drawAngle = angle;
+        if (drawAngle > Math.PI / 2) drawAngle -= Math.PI;
+        if (drawAngle < -Math.PI / 2) drawAngle += Math.PI;
+        ctx.rotate(drawAngle);
+        ctx.translate(-x, -y);
+      }
+      
+      // Background pill (compatible with older Safari - no roundRect)
+      const rx = x - width/2;
+      const ry = y - height/2;
+      const r = 4;
+      ctx.beginPath();
+      ctx.moveTo(rx + r, ry);
+      ctx.lineTo(rx + width - r, ry);
+      ctx.arcTo(rx + width, ry, rx + width, ry + r, r);
+      ctx.lineTo(rx + width, ry + height - r);
+      ctx.arcTo(rx + width, ry + height, rx + width - r, ry + height, r);
+      ctx.lineTo(rx + r, ry + height);
+      ctx.arcTo(rx, ry + height, rx, ry + height - r, r);
+      ctx.lineTo(rx, ry + r);
+      ctx.arcTo(rx, ry, rx + r, ry, r);
+      ctx.closePath();
+      ctx.fillStyle = darkMode ? 'rgba(36, 40, 59, 0.95)' : 'rgba(255, 255, 255, 0.9)';
+      ctx.fill();
+      ctx.strokeStyle = darkMode ? '#7d6bc2' : '#d1d5db';
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
-    // Text
-    ctx.fillStyle = darkMode ? '#c0caf5' : '#111827';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, x, y);
-    ctx.restore();
+      // Text
+      ctx.fillStyle = darkMode ? '#c0caf5' : '#111827';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    } finally {
+      ctx.restore();
+    }
   };
 
   // Helper: nakloeny popisek mery mezi dvema body s kolmym odsazenim

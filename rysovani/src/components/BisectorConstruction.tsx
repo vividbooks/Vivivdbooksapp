@@ -967,6 +967,7 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
     renderToBuffer(bufferCtx, animProgress);
 
     // Vyčistit hlavní canvas
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Fade-in efekt: prvních 5% animace
