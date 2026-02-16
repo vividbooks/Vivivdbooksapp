@@ -165,6 +165,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   const [freehandPaths, setFreehandPaths] = useState<FreehandPath[]>([]);
   // const [currentPath, setCurrentPath] = useState<{x: number, y: number}[] | null>(null); // Replaced by ref
   const currentPathRef = useRef<{x: number, y: number}[] | null>(null);
+  const lastHighlightPointRef = useRef<{x: number, y: number} | null>(null);
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null); // Pro tvorbu tvarů (první klik)
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
   const [hoveredShape, setHoveredShape] = useState<{ id: string; proj: {x:number, y:number}; angle: number } | null>(null);
@@ -1633,6 +1634,19 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
     // 5. NÁSTROJ: VOLNÉ PERO / ZVÝRAZŇOVAČ
     if (activeTool === 'freehand' || activeTool === 'highlighter') {
+       if (activeTool === 'highlighter' && e.shiftKey && lastHighlightPointRef.current) {
+         // Shift+click: straight line from last point to here
+         const start = lastHighlightPointRef.current;
+         setFreehandPaths(prev => [...prev, {
+           id: crypto.randomUUID(),
+           points: [start, { x: wx, y: wy }],
+           color: 'rgba(250, 204, 21, 0.4)',
+           width: 20,
+           isHighlight: true,
+         }]);
+         lastHighlightPointRef.current = { x: wx, y: wy };
+         return;
+       }
        currentPathRef.current = [{ x: wx, y: wy }];
        return;
     }
@@ -2092,13 +2106,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
     // Drawing logic
     if ((activeTool === 'freehand' || activeTool === 'highlighter') && currentPathRef.current) {
-       if (activeTool === 'highlighter' && e.shiftKey && currentPathRef.current.length >= 1) {
-         // Shift held: straight line from start point to current position
-         const start = currentPathRef.current[0];
-         currentPathRef.current = [start, { x: wx, y: wy }];
-       } else {
-         currentPathRef.current.push({ x: wx, y: wy });
-       }
+       currentPathRef.current.push({ x: wx, y: wy });
     }
     
     // Tablet mód - positioning kolmice (with point snapping)
@@ -2213,6 +2221,11 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                 width: isHL ? 20 : 2,
                 isHighlight: isHL || undefined,
             }]);
+            // Save last point for shift+click straight lines
+            if (isHL) {
+              const pts = currentPathRef.current!;
+              lastHighlightPointRef.current = pts[pts.length - 1];
+            }
         }
         currentPathRef.current = null;
     }
@@ -4190,6 +4203,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     setPerpBaseId(null);
     setSelectedPointId(null);
     setAngleInput(prev => ({ ...prev, visible: false }));
+    if (activeTool !== 'highlighter') lastHighlightPointRef.current = null;
     // Angle tablet mode: inicializace při přepnutí na úhloměr v tablet módu
     if (activeTool === 'angle' && isTabletMode) {
       setAngleTabletState({ step: 'selectLine', selectedLineId: null, currentPos: null, baseAngle: 0 });
