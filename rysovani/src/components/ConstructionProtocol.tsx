@@ -72,6 +72,20 @@ export function Latex({ math, className }: { math: string; className?: string })
   );
 }
 
+interface GeoPointLike {
+  id: string;
+  x: number;
+  y: number;
+  label: string;
+}
+
+interface GeoShapeLike {
+  id: string;
+  type: 'segment' | 'line' | 'ray' | 'circle';
+  label: string;
+  definition: { p1Id: string; p2Id?: string };
+}
+
 interface ConstructionProtocolProps {
   steps: ConstructionStep[];
   visible: boolean;
@@ -79,14 +93,56 @@ interface ConstructionProtocolProps {
   onClear: () => void;
   darkMode: boolean;
   tabletMode?: boolean;
+  points?: GeoPointLike[];
+  shapes?: GeoShapeLike[];
+  pixelsPerCm?: number;
 }
 
-export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMode, tabletMode = false }: ConstructionProtocolProps) {
+export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMode, tabletMode = false, points = [], shapes = [], pixelsPerCm = 50 }: ConstructionProtocolProps) {
   useKatexCSS();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState<'none' | 'text' | 'latex'>('none');
   const t = tabletMode;
+
+  const fmtCm = (px: number): string => {
+    const cm = px / pixelsPerCm;
+    return cm % 1 === 0 ? cm.toFixed(0) : cm.toFixed(1);
+  };
+
+  const liveSteps = useMemo(() => {
+    if (points.length === 0 && shapes.length === 0) return steps;
+    return steps.map(step => {
+      if (step.type === 'segment' || step.type === 'circle') {
+        const shape = shapes.find(s => step.objectIds.includes(s.id));
+        if (!shape) return step;
+        const p1 = points.find(p => p.id === shape.definition.p1Id);
+        const p2 = shape.definition.p2Id ? points.find(p => p.id === shape.definition.p2Id) : null;
+        if (!p1 || !p2) return step;
+        const dist = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+        const d = fmtCm(dist);
+        if (step.type === 'segment') {
+          const lA = p1.label || '?';
+          const lB = p2.label || '?';
+          return {
+            ...step,
+            notation: `${lA}${lB}; |${lA}${lB}| = ${d} cm`,
+            latex: `${lA}${lB} \\;;\\; |${lA}${lB}| = ${d} \\text{ cm}`,
+            description: `Úsečka ${lA}${lB} o délce ${d} cm`,
+          };
+        } else {
+          const lS = p1.label || '?';
+          return {
+            ...step,
+            notation: `${shape.label}(${lS}; ${d} cm)`,
+            latex: `${shape.label}(${lS};\\, ${d} \\text{ cm})`,
+            description: `Kružnice ${shape.label} se středem ${lS} a poloměrem ${d} cm`,
+          };
+        }
+      }
+      return step;
+    });
+  }, [steps, points, shapes, pixelsPerCm]);
 
   useEffect(() => {
     if (scrollRef.current && steps.length > 0) {
@@ -110,8 +166,8 @@ export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMod
   };
 
   const handleCopyPlain = () => {
-    if (steps.length === 0) return;
-    const text = CZ.title + ":\n" + steps.map(s => `${s.stepNumber}. ${s.notation}`).join('\n');
+    if (liveSteps.length === 0) return;
+    const text = CZ.title + ":\n" + liveSteps.map(s => `${s.stepNumber}. ${s.notation}`).join('\n');
     if (copyToClipboard(text)) {
       setCopied('text');
       setTimeout(() => setCopied('none'), 2000);
@@ -119,9 +175,9 @@ export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMod
   };
 
   const handleCopyLatex = () => {
-    if (steps.length === 0) return;
+    if (liveSteps.length === 0) return;
     const text = "% " + CZ.title + "\n\\begin{enumerate}\n" +
-      steps.map(s => `  \\item $${s.latex}$`).join('\n') +
+      liveSteps.map(s => `  \\item $${s.latex}$`).join('\n') +
       "\n\\end{enumerate}";
     if (copyToClipboard(text)) {
       setCopied('latex');
@@ -262,7 +318,7 @@ export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMod
           ref={scrollRef}
           className={`flex-1 overflow-y-auto ${t ? 'px-5 py-5' : 'px-3 py-3'}`}
         >
-          {steps.length === 0 ? (
+          {liveSteps.length === 0 ? (
             <div className={`flex flex-col items-center justify-center h-full text-center px-6 ${
               darkMode ? 'text-[#565f89]' : 'text-gray-400'
             }`}>
@@ -272,14 +328,14 @@ export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMod
             </div>
           ) : (
             <div className={t ? 'space-y-2' : 'space-y-1'}>
-              {steps.map((step, idx) => (
+              {liveSteps.map((step, idx) => (
                 <div
                   key={step.id}
                   className={`group flex items-start ${t ? 'gap-3 px-4 py-4' : 'gap-2 px-3 py-2.5'} rounded-xl transition-colors ${
                     darkMode
                       ? 'hover:bg-[#24283b]/60'
                       : 'hover:bg-gray-50'
-                  } ${idx === steps.length - 1 ? (darkMode ? 'bg-[#24283b]/40' : 'bg-blue-50/50') : ''}`}
+                  } ${idx === liveSteps.length - 1 ? (darkMode ? 'bg-[#24283b]/40' : 'bg-blue-50/50') : ''}`}
                 >
                   <span className={`${t ? 'text-[20px] min-w-[32px]' : 'text-xs min-w-[22px]'} text-right pt-1 tabular-nums ${
                     darkMode ? 'text-[#565f89]' : 'text-gray-400'
@@ -313,7 +369,7 @@ export function ConstructionProtocol({ steps, visible, onClose, onClear, darkMod
         </div>
 
         {/* Footer */}
-        {steps.length > 0 && (
+        {liveSteps.length > 0 && (
           <div className={`${t ? 'px-6 py-4' : 'px-4 py-2.5'} border-t ${
             darkMode
               ? 'border-[#2a2b3d] text-[#565f89]'

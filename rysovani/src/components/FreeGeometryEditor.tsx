@@ -3413,6 +3413,21 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                 if (useTabletPos || !isTabletMode) {
                   drawRuler(ctx, rStart, rEnd, 0.5);
                 }
+                
+                // Kontrastní bod v místě projekce (střed kolmice)
+                if (useTabletPos || hoveredShape) {
+                  ctx.beginPath();
+                  ctx.arc(projX, projY, 10, 0, Math.PI * 2);
+                  ctx.fillStyle = darkMode ? '#ffffff' : '#1e1b4b';
+                  ctx.fill();
+                  ctx.lineWidth = 3;
+                  ctx.strokeStyle = '#3b82f6';
+                  ctx.stroke();
+                  ctx.beginPath();
+                  ctx.arc(projX, projY, 4, 0, Math.PI * 2);
+                  ctx.fillStyle = '#3b82f6';
+                  ctx.fill();
+                }
 
                 ctx.restore();
             }
@@ -3439,20 +3454,38 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             // Tablet positioning: zobraz úhloměr na fixní pozici
             drawProtractor(ctx, angleTabletState.currentPos, angleTabletState.baseAngle, 200, '#f97316');
             
-            // Highlight bodu dotyku
+            // Highlight bodu dotyku - kontrastní invertovaný bod
+            ctx.save();
             ctx.beginPath();
-            ctx.arc(angleTabletState.currentPos.x, angleTabletState.currentPos.y, 5, 0, Math.PI * 2);
-            ctx.fillStyle = darkMode ? '#ff9e64' : '#f97316';
+            ctx.arc(angleTabletState.currentPos.x, angleTabletState.currentPos.y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = darkMode ? '#ffffff' : '#1e1b4b';
             ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = darkMode ? '#f97316' : '#f97316';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(angleTabletState.currentPos.x, angleTabletState.currentPos.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#f97316';
+            ctx.fill();
+            ctx.restore();
         } else if (hoveredShape && mousePosRef.current) {
             // Přichycený k čáře
             drawProtractor(ctx, hoveredShape.proj, hoveredShape.angle, 200, '#f97316');
             
-            // Highlight bodu dotyku
+            // Highlight bodu dotyku - kontrastní invertovaný bod
+            ctx.save();
             ctx.beginPath();
-            ctx.arc(hoveredShape.proj.x, hoveredShape.proj.y, 5, 0, Math.PI * 2);
-            ctx.fillStyle = darkMode ? '#ff9e64' : '#f97316';
+            ctx.arc(hoveredShape.proj.x, hoveredShape.proj.y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = darkMode ? '#ffffff' : '#1e1b4b';
             ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#f97316';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(hoveredShape.proj.x, hoveredShape.proj.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#f97316';
+            ctx.fill();
+            ctx.restore();
         } else if (mousePosRef.current && !isTabletMode) {
             // "Floating" ghost - navádí uživatele (pouze PC mód)
             drawProtractor(ctx, mousePosRef.current, 0, 200, 'rgba(249, 115, 22, 0.3)');
@@ -5598,6 +5631,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         onClear={clearConstructionSteps}
         darkMode={darkMode}
         tabletMode={isTabletMode}
+        points={points}
+        shapes={shapes}
+        pixelsPerCm={PIXELS_PER_CM}
       />
 
     </div>
