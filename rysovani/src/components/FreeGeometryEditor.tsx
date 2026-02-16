@@ -1019,6 +1019,15 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Native wheel listener with { passive: false } to prevent browser zoom (trackpad pinch)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const onWheel = (e: WheelEvent) => { e.preventDefault(); };
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, []);
+
   const screenToWorld = (sx: number, sy: number) => ({
     x: (sx - offset.x) / scale,
     y: (sy - offset.y) / scale
@@ -1639,6 +1648,12 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             handlePos: null
           });
           triggerEffect(centerPos.x, centerPos.y, '#3b82f6');
+          return;
+        }
+        
+        // V tablet módu: pokud je circle workflow aktivní, ignoruj další kliknutí na canvas
+        // (uživatel musí použít "Narýsovat" tlačítko)
+        if (activeTool === 'circle' && isTabletMode && circleTabletState.active) {
           return;
         }
         
@@ -3170,6 +3185,23 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
              drawCompass(ctx, p1, r, 0.5, actualP2);
              drawCircle(ctx, p1, r, 1, ghostColor, 2.5);
 
+              // Kontrastní střed kružnice (viditelný i na tabletu)
+              if (isTabletMode) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = darkMode ? '#ffffff' : '#1e1b4b';
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#3b82f6';
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+                ctx.restore();
+              }
+
               // Ghost circle radius measurement
               if (showMeasurements && r > 10) {
                    const ghostCm = (r / PIXELS_PER_CM).toFixed(1).replace('.', ',');
@@ -4611,11 +4643,11 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       )}
       
       {/* Circle tablet mode - Narýsovat button */}
-      {!recordingState.showPlayer && activeTool === 'circle' && isTabletMode && circleTabletState.active && circleTabletState.center && selectedPointId && (
+      {!recordingState.showPlayer && activeTool === 'circle' && isTabletMode && circleTabletState.active && circleTabletState.center && circleTabletState.centerId && (
         <button
           onClick={() => {
             // Vytvoříme bod na obvodu kružnice
-            const centerPoint = points.find(p => p.id === selectedPointId);
+            const centerPoint = points.find(p => p.id === circleTabletState.centerId);
             if (!centerPoint) return;
             
             const radiusPointId = crypto.randomUUID();
@@ -4650,7 +4682,33 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
               handlePos: null
             });
           }}
-          className="absolute left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const centerPoint = points.find(p => p.id === circleTabletState.centerId);
+            if (!centerPoint) return;
+            const radiusPointId = crypto.randomUUID();
+            const effectiveRadius = circleInput.active 
+              ? circleInput.radius * PIXELS_PER_CM 
+              : circleTabletState.radius;
+            const handleAngle = circleTabletState.handlePos 
+              ? Math.atan2(circleTabletState.handlePos.y - centerPoint.y, circleTabletState.handlePos.x - centerPoint.x)
+              : 0;
+            const radiusPoint: GeoPoint = {
+              id: radiusPointId,
+              x: centerPoint.x + Math.cos(handleAngle) * effectiveRadius,
+              y: centerPoint.y + Math.sin(handleAngle) * effectiveRadius,
+              label: '',
+              hidden: false
+            };
+            setPoints(prev => [...prev, radiusPoint]);
+            startConstructionAnimation('circle', centerPoint, radiusPoint);
+            setSelectedPointId(null);
+            setCircleTabletState({
+              active: false, centerId: null, center: null, radius: 150, isDraggingHandle: false, handlePos: null
+            });
+          }}
+          className="absolute left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
           style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
@@ -4665,7 +4723,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       {!recordingState.showPlayer && (() => {
         // Skrýt instrukční lištu, když je viditelné tlačítko "Narýsovat"/"Umístit" (positioning step)
         const perpPositioningActive = activeTool === 'perpendicular' && perpTabletState.step === 'positioning' && perpTabletState.currentPos;
-        const circleDrawActive = activeTool === 'circle' && circleTabletState.active && circleTabletState.center && selectedPointId;
+        const circleDrawActive = activeTool === 'circle' && circleTabletState.active && circleTabletState.center && circleTabletState.centerId;
         const anglePositioningActive = activeTool === 'angle' && angleTabletState.step === 'positioning' && angleTabletState.currentPos;
         if (isTabletMode && (perpPositioningActive || circleDrawActive || anglePositioningActive)) return null;
         
