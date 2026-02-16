@@ -206,6 +206,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     handleAngle: 0, // úhel handle od středu (radiány)
     isDraggingCenter: false,
     isDraggingHandle: false,
+    mode: 'circle' as 'point' | 'circle',
   });
 
   const [segmentInput, setSegmentInput] = useState({
@@ -1238,7 +1239,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     const mouseY = e.clientY - rect.top;
 
     // Citlivost zoomu
-    const zoomFactor = -e.deltaY * 0.003;
+    const zoomFactor = -e.deltaY * 0.008;
     const newScale = Math.min(Math.max(0.1, scale + zoomFactor), 5);
     
     // Zoomování směrem k myši:
@@ -4077,21 +4078,13 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     }
   }, [activeTool]);
 
-  // Custom crosshair kurzor pro PC verzi (~70×70px, 0.3 stroke)
-  const getCustomCrosshairCursor = (): string => {
-    if (isTabletMode) return 'crosshair';
-    const color = darkMode ? '%23c0caf5' : '%23333333';
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70'><line x1='0' y1='35' x2='70' y2='35' stroke='${color}' stroke-width='0.3'/><line x1='35' y1='0' x2='35' y2='70' stroke='${color}' stroke-width='0.3'/></svg>`;
-    return `url("data:image/svg+xml,${svg}") 35 35, crosshair`;
-  };
-
   const getContainerCursor = (): string => {
     if (activeTool === 'pan') return 'grab';
     if (activeTool === 'move') {
       if (hoveredShapeForMove) return selectedShapeIds.includes(hoveredShapeForMove) ? 'move' : 'pointer';
       return hoveredPointId ? 'move' : 'default';
     }
-    return getCustomCrosshairCursor();
+    return 'crosshair';
   };
 
   const clearAll = () => {
@@ -4970,57 +4963,83 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                     ))}
                 </div>
             </div>
+
+            {/* Přepínač: Bod / Kružnice */}
+            <div className="mt-4">
+                <label className={`text-xs font-medium mb-2 block ${darkMode ? 'text-[#7aa2f7]' : 'text-gray-500'}`}>
+                    Narýsovat
+                </label>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setCircleInput(prev => ({ ...prev, mode: 'point' }))}
+                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setCircleInput(prev => ({ ...prev, mode: 'point' })); }}
+                        className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                            circleInput.mode === 'point'
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : darkMode
+                                    ? 'bg-[#414868] hover:bg-[#565f89] text-[#7aa2f7]'
+                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                        }`}
+                    >
+                        Bod
+                    </button>
+                    <button
+                        onClick={() => setCircleInput(prev => ({ ...prev, mode: 'circle' }))}
+                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setCircleInput(prev => ({ ...prev, mode: 'circle' })); }}
+                        className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                            circleInput.mode === 'circle'
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : darkMode
+                                    ? 'bg-[#414868] hover:bg-[#565f89] text-[#7aa2f7]'
+                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                        }`}
+                    >
+                        Kružnice
+                    </button>
+                </div>
+            </div>
           </div>
 
           {/* Compass mode: Narýsovat button at bottom center */}
-          {circleInput.center && (
+          {circleInput.center && (() => {
+            const doCompassDraw = () => {
+              if (!circleInput.center) return;
+              const r = circleInput.radius * PIXELS_PER_CM;
+              const targetX = circleInput.center.x + Math.cos(circleInput.handleAngle) * r;
+              const targetY = circleInput.center.y + Math.sin(circleInput.handleAngle) * r;
+
+              if (circleInput.mode === 'point') {
+                const centerId = crypto.randomUUID();
+                const centerLabel = getNextPointLabel();
+                const centerPoint: GeoPoint = { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
+                const pointId = crypto.randomUUID();
+                const pointLabel = getNextPointLabel();
+                const newPoint: GeoPoint = { id: pointId, x: targetX, y: targetY, label: pointLabel, hidden: false };
+                setPoints(prev => [...prev, centerPoint, newPoint]);
+                triggerEffect(targetX, targetY, '#3b82f6');
+              } else {
+                const centerId = crypto.randomUUID();
+                const centerLabel = getNextPointLabel();
+                const centerPoint: GeoPoint = { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
+                const radiusId = crypto.randomUUID();
+                const radiusPoint: GeoPoint = { id: radiusId, x: targetX, y: targetY, label: '', hidden: false };
+                setPoints(prev => [...prev, centerPoint, radiusPoint]);
+                startConstructionAnimation('circle', centerPoint, radiusPoint);
+              }
+              setCircleInput(prev => ({ ...prev, visible: false, center: null, isDraggingCenter: false, isDraggingHandle: false }));
+              setActiveTool('circle');
+            };
+            return (
             <button
-              onClick={() => {
-                if (!circleInput.center) return;
-                const centerId = crypto.randomUUID();
-                const centerLabel = getNextPointLabel();
-                const centerPoint: GeoPoint = { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
-                const r = circleInput.radius * PIXELS_PER_CM;
-                const radiusId = crypto.randomUUID();
-                const radiusPoint: GeoPoint = {
-                  id: radiusId,
-                  x: circleInput.center.x + Math.cos(circleInput.handleAngle) * r,
-                  y: circleInput.center.y + Math.sin(circleInput.handleAngle) * r,
-                  label: '',
-                  hidden: false
-                };
-                setPoints(prev => [...prev, centerPoint, radiusPoint]);
-                startConstructionAnimation('circle', centerPoint, radiusPoint);
-                setCircleInput(prev => ({ ...prev, visible: false, center: null, isDraggingCenter: false, isDraggingHandle: false }));
-                setActiveTool('circle');
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!circleInput.center) return;
-                const centerId = crypto.randomUUID();
-                const centerLabel = getNextPointLabel();
-                const centerPoint: GeoPoint = { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
-                const r = circleInput.radius * PIXELS_PER_CM;
-                const radiusId = crypto.randomUUID();
-                const radiusPoint: GeoPoint = {
-                  id: radiusId,
-                  x: circleInput.center.x + Math.cos(circleInput.handleAngle) * r,
-                  y: circleInput.center.y + Math.sin(circleInput.handleAngle) * r,
-                  label: '',
-                  hidden: false
-                };
-                setPoints(prev => [...prev, centerPoint, radiusPoint]);
-                startConstructionAnimation('circle', centerPoint, radiusPoint);
-                setCircleInput(prev => ({ ...prev, visible: false, center: null, isDraggingCenter: false, isDraggingHandle: false }));
-                setActiveTool('circle');
-              }}
+              onClick={doCompassDraw}
+              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); doCompassDraw(); }}
               className="absolute left-1/2 -translate-x-1/2 z-50 px-8 py-4 rounded-full text-base font-bold bg-blue-600 text-white shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
               style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
             >
-              Narýsovat ({circleInput.radius.toFixed(1).replace('.', ',')} cm)
+              Narýsovat {circleInput.mode === 'point' ? 'bod' : 'kružnici'} ({circleInput.radius.toFixed(1).replace('.', ',')} cm)
             </button>
-          )}
+            );
+          })()}
         </>
       )}
 
