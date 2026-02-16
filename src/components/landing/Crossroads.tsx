@@ -6,7 +6,7 @@ const cardStyle: React.CSSProperties = {
   flexDirection: 'column',
   borderRadius: '32px',
   overflow: 'hidden',
-  border: '2px solid transparent',
+  border: '2px solid #e5e7eb',
   background: 'white',
   boxShadow: '0 1px 4px 0 rgba(0,0,0,0.06)',
   textAlign: 'left',
@@ -15,6 +15,9 @@ const cardStyle: React.CSSProperties = {
   cursor: 'pointer',
   width: '100%',
   maxWidth: '480px',
+  minWidth: '0',
+  flex: '1 1 320px',
+  margin: '12px',
 };
 
 export function Crossroads() {
@@ -67,10 +70,9 @@ export function Crossroads() {
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'wrap',
-          gap: '32px',
           justifyContent: 'center',
           width: '100%',
-          maxWidth: '1020px',
+          maxWidth: '1044px',
         }}
       >
         {/* Card 1: Rýsování a konstrukce */}

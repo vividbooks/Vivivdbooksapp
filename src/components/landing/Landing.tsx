@@ -84,6 +84,7 @@ const subFilterStyle = (active: boolean): React.CSSProperties => ({
   boxShadow: active ? '0 4px 10px 0 #e0e7ff' : 'none',
   transition: 'all 200ms',
   cursor: 'pointer',
+  margin: '3px',
 });
 
 /* ── Rýsování – volné kreslení data ── */
@@ -548,7 +549,7 @@ export function Landing({ mode }: { mode: LandingMode }) {
               type="button"
               onClick={() => setActiveFilter(f)}
               onTouchEnd={(e) => { e.preventDefault(); setActiveFilter(f); }}
-              style={filterBtnStyle(f, activeFilter)}
+              style={{ ...filterBtnStyle(f, activeFilter), margin: '4px' }}
             >
               {HEADING_MAP[f]}
             </button>
@@ -574,7 +575,7 @@ export function Landing({ mode }: { mode: LandingMode }) {
 
         {/* Rýsování – Volné rýsování (Tabule + Počítač) */}
         {activeFilter === 'rysovani' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px', maxWidth: '660px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px', maxWidth: '660px' }}>
             {drawingItems.map((item) => (
               <DrawingCard key={item.id} item={item} />
             ))}
@@ -583,7 +584,7 @@ export function Landing({ mode }: { mode: LandingMode }) {
 
         {/* Konstrukce */}
         {activeFilter === 'konstrukce' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px' }}>
             {constructionItems.map((item) => (
               <ConstructionCard key={item.id} item={item} />
             ))}
@@ -592,14 +593,14 @@ export function Landing({ mode }: { mode: LandingMode }) {
 
         {/* 3D tělesa */}
         {activeFilter === 'telesa' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px' }}>
             {bodies3D.map((obj) => <ObjectCard key={obj.id} object={obj} />)}
           </div>
         )}
 
         {/* Rovinné útvary */}
         {activeFilter === 'rovinne' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px' }}>
             {flat2D.map((obj) => <ObjectCard key={obj.id} object={obj} />)}
           </div>
         )}
@@ -608,9 +609,9 @@ export function Landing({ mode }: { mode: LandingMode }) {
         {activeFilter === 'cviceni' && (
           <>
             {/* ── Sub-filters ── */}
-            <div style={{ maxWidth: '900px', margin: '0 auto 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ maxWidth: '900px', margin: '0 auto 32px', display: 'flex', flexDirection: 'column' }}>
               {/* Objekt filter */}
-              <div>
+              <div style={{ marginBottom: '16px' }}>
                 <div style={{ color: '#4e5871', fontSize: '13px', fontWeight: 500, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Objekt
                 </div>
@@ -657,7 +658,7 @@ export function Landing({ mode }: { mode: LandingMode }) {
 
             {/* Tiles */}
             {filteredExercises.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '24px' }}>
                 {filteredExercises.map(({ object, taskType }) => (
                   <ExerciseTile key={`${object.id}-${taskType}`} object={object} taskType={taskType} />
                 ))}

@@ -1944,7 +1944,14 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     // Angle tool shape snapping
     if (activeTool === 'angle' || activeTool === 'perpendicular') {
         let closest = null;
-        let minD = 50 / scale; // Zvětšeno z 20 na 50 pro lepší citlivost chytání
+        // During positioning mode, always snap to the selected line (no distance limit)
+        const isInPositioningMode = 
+          (activeTool === 'perpendicular' && isTabletMode && perpTabletState.step === 'positioning') ||
+          (activeTool === 'angle' && isTabletMode && angleTabletState.step === 'positioning');
+        // Use larger threshold for touch interactions (finger is less precise than mouse)
+        const isTouchActive = (Date.now() - lastTouchTimeRef.current) < 1000;
+        const baseThreshold = isTouchActive ? 80 : 50;
+        let minD = isInPositioningMode ? Infinity : baseThreshold / scale;
 
         shapes.forEach(shape => {
             if (shape.type === 'segment' || shape.type === 'line' || shape.type === 'ray') {
@@ -1967,7 +1974,6 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                          const dy = p2.y - p1.y;
                          const len = Math.sqrt(dx*dx + dy*dy);
                          if (len > 0.001) {
-                             // Prodloužíme dostatečně, aby to pokrylo celou pracovní plochu
                              const EXT = 100000;
                              if (shape.type === 'line') start = { x: p1.x - dx/len * EXT, y: p1.y - dy/len * EXT } as any;
                              end = { x: p1.x + dx/len * EXT, y: p1.y + dy/len * EXT } as any;
@@ -4314,11 +4320,12 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       {!recordingState.showPlayer && activeTool === 'circle' && !circleInput.visible && !(isTabletMode && circleTabletState.active) && !selectedPointId && (
         <button
           onClick={() => setCircleInput(prev => ({ ...prev, visible: true }))}
-          className={`absolute bottom-4 left-4 z-10 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all hover:scale-105 ${
+          className={`absolute left-4 z-10 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all hover:scale-105 ${
             circleInput.active 
               ? 'bg-blue-600 text-white shadow-lg' 
               : darkMode ? 'bg-[#24283b] text-[#c0caf5] border border-[#565f89]' : 'bg-white text-gray-600 shadow-md border'
           }`}
+          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Ruler className="size-4" />
           {circleInput.active 
@@ -4332,11 +4339,12 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       {!recordingState.showPlayer && activeTool === 'segment' && !segmentInput.visible && (
         <button
           onClick={() => setSegmentInput(prev => ({ ...prev, visible: true }))}
-          className={`absolute bottom-4 left-4 z-10 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all hover:scale-105 ${
+          className={`absolute left-4 z-10 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all hover:scale-105 ${
             segmentInput.active 
               ? 'bg-blue-600 text-white shadow-lg' 
               : darkMode ? 'bg-[#24283b] text-[#c0caf5] border border-[#565f89]' : 'bg-white text-gray-600 shadow-md border'
           }`}
+          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Ruler className="size-4" />
           {segmentInput.active 
@@ -4413,7 +4421,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
               setActiveTool('move');
             }
           }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          className="absolute left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
           Narýsovat
@@ -4436,7 +4445,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
               isMirrored: false
             });
           }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-orange-500 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          className="absolute left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-orange-500 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
           Umístit úhloměr
@@ -4483,7 +4493,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
               handlePos: null
             });
           }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          className="absolute left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
           {circleInput.active 
@@ -4533,11 +4544,11 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         }
 
         return (
-      <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full font-medium transition-all duration-300 ${
+      <div className={`absolute left-1/2 -translate-x-1/2 z-10 rounded-full font-medium transition-all duration-300 ${
         showBlueStyle
           ? 'px-8 py-4 text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_24px_rgba(59,130,246,0.5)] border-2 border-blue-300/60'
           : `px-6 py-3 text-sm ${darkMode ? 'bg-[#24283b] text-[#c0caf5]' : 'bg-white text-gray-600 shadow-md border'}`
-      }`}>
+      }`} style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
         {canvasWarning ? (
           <span className="flex items-center gap-3">
             <span className="relative flex size-3">
@@ -4577,9 +4588,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
       {/* ZOOM CONTROLS */}
       {!recordingState.showPlayer && (
-      <div className={`absolute bottom-4 right-4 z-10 flex items-center gap-2 p-2 rounded-xl border ${
+      <div className={`absolute right-4 z-10 flex items-center gap-2 p-2 rounded-xl border ${
         darkMode ? 'bg-[#24283b] border-[#565f89]' : 'bg-white shadow-lg border-gray-200'
-      }`}>
+      }`} style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
         <button 
           onClick={() => zoomToCenter(scale - 0.1)}
           className={`p-1.5 rounded-lg transition-colors ${
@@ -5087,9 +5098,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
           <div className="flex-1" />
           
           {/* Ovladaci panel prehravace */}
-          <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl ${
+          <div className={`absolute left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl ${
             darkMode ? 'bg-gray-900 border border-gray-800' : 'bg-white'
-          }`}>
+          }`} style={{ bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))' }}>
             {/* Reset */}
             <button
               onClick={() => {

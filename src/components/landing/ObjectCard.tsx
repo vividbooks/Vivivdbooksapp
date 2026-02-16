@@ -15,6 +15,7 @@ export function ObjectCard({ object }: Props) {
   return (
     <button
       onClick={() => navigate(object.path)}
+      onTouchEnd={(e) => { e.preventDefault(); navigate(object.path); }}
       className="flex flex-col text-left w-full"
       style={{
         borderRadius: '24px',

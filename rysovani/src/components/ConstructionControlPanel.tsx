@@ -33,9 +33,9 @@ export function ConstructionControlPanel({
   };
 
   return (
-    <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl ${
+    <div className={`absolute left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl ${
       darkMode ? 'bg-gray-900 border border-gray-800' : 'bg-white'
-    }`} style={{ fontFamily: "var(--font-family, 'Fenomen Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
+    }`} style={{ bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))', fontFamily: "var(--font-family, 'Fenomen Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
       {/* Reset */}
       <button
         onClick={onRestart}

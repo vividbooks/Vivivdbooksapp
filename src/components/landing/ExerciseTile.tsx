@@ -47,6 +47,7 @@ export function ExerciseTile({ object, taskType }: Props) {
     <button
       type="button"
       onClick={() => navigate(setupPath)}
+      onTouchEnd={(e) => { e.preventDefault(); navigate(setupPath); }}
       className="flex flex-col text-left w-full"
       style={{
         borderRadius: '24px',
