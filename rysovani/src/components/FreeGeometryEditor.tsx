@@ -4812,33 +4812,72 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         const circleDrawActive = activeTool === 'circle' && circleTabletState.active && circleTabletState.center && circleTabletState.centerId;
         const anglePositioningActive = activeTool === 'angle' && angleTabletState.step === 'positioning' && angleTabletState.currentPos;
         if (isTabletMode && (perpPositioningActive || circleDrawActive || anglePositioningActive)) return null;
-        
-        const isTabletInstruction = isTabletMode && !animState.isActive && !canvasWarning && (
-          activeTool === 'perpendicular' || 
-          activeTool === 'circle' ||
-          activeTool === 'angle'
-        );
-        
-        const showBlueStyle = isTabletInstruction || !!canvasWarning;
-        
-        let tabletInstructionText = '';
-        if (isTabletMode && activeTool === 'perpendicular') {
-          tabletInstructionText = perpTabletState.step === 'selectLine' 
-            ? 'Klikni na linku, od které chceš táhnout kolmici' 
-            : perpTabletState.step === 'positioning'
-              ? 'Posunuj pravítko po lince a klikni "Narýsovat"'
-              : 'Vyber odkud chceš táhnout kolmici';
-        } else if (isTabletMode && activeTool === 'circle') {
-          tabletInstructionText = circleTabletState.active
-            ? 'Táhni modrý bod pro změnu velikosti, pak klikni „Narýsovat"'
-            : 'Klikni pro umístění středu kružnice';
-        } else if (isTabletMode && activeTool === 'angle') {
-          tabletInstructionText = angleTabletState.step === 'selectLine'
-            ? 'Klikni na linku, kam chceš umístit úhloměr'
-            : angleTabletState.step === 'positioning'
-              ? 'Posunuj úhloměr po lince a klikni "Umístit úhloměr"'
-              : 'Vyber kam chceš umístit úhloměr';
+
+        // Determine content
+        let content: React.ReactNode = null;
+        let showBlueStyle = false;
+
+        if (canvasWarning) {
+          showBlueStyle = true;
+          content = (
+            <span className="flex items-center gap-3">
+              <span className="relative flex size-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-300 opacity-75"></span>
+                <span className="relative inline-flex rounded-full size-3 bg-orange-400"></span>
+              </span>
+              <span className="tracking-wide">{canvasWarning}</span>
+            </span>
+          );
+        } else if (animState.isActive) {
+          content = (
+            <span className="flex items-center gap-2 animate-pulse">
+              <span className="size-2 rounded-full bg-blue-500"></span>
+              Rýsuji...
+            </span>
+          );
+        } else if (isTabletMode && (activeTool === 'perpendicular' || activeTool === 'circle' || activeTool === 'angle')) {
+          showBlueStyle = true;
+          let tabletText = '';
+          if (activeTool === 'perpendicular') {
+            tabletText = perpTabletState.step === 'selectLine' 
+              ? 'Klikni na linku, od které chceš táhnout kolmici' 
+              : perpTabletState.step === 'positioning'
+                ? 'Posunuj pravítko po lince a klikni "Narýsovat"'
+                : 'Vyber odkud chceš táhnout kolmici';
+          } else if (activeTool === 'circle') {
+            tabletText = circleTabletState.active
+              ? 'Táhni modrý bod pro změnu velikosti, pak klikni „Narýsovat"'
+              : 'Klikni pro umístění středu kružnice';
+          } else if (activeTool === 'angle') {
+            tabletText = angleTabletState.step === 'selectLine'
+              ? 'Klikni na linku, kam chceš umístit úhloměr'
+              : angleTabletState.step === 'positioning'
+                ? 'Posunuj úhloměr po lince a klikni "Umístit úhloměr"'
+                : 'Vyber kam chceš umístit úhloměr';
+          }
+          content = (
+            <span className="flex items-center gap-3">
+              <span className="relative flex size-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full size-3 bg-white"></span>
+              </span>
+              <span className="tracking-wide">{tabletText}</span>
+            </span>
+          );
+        } else {
+          let text = '';
+          if (activeTool === 'move') text = selectedShapeIds.length > 0 ? `Vybráno ${selectedShapeIds.length} ${selectedShapeIds.length === 1 ? 'tvar' : selectedShapeIds.length < 5 ? 'tvary' : 'tvarů'} · Táhni pro přesun · Del smaže` : 'Klikni na bod nebo tvar · Táhni pro obdélníkový výběr · Ctrl+klik pro vícenásobný výběr';
+          else if (activeTool === 'point') text = 'Klikni pro vytvoření bodu';
+          else if (activeTool === 'segment') text = segmentInput.active ? (selectedPointId ? `Vyber směr (fixní délka ${segmentInput.length} cm)` : 'Vyber začátek úsečky') : (selectedPointId ? 'Vyber druhý bod úsečky' : 'Vyber první bod úsečky');
+          else if (activeTool === 'line') text = selectedPointId ? 'Vyber druhý bod přímky' : 'Vyber první bod přímky';
+          else if (activeTool === 'circle' && !isTabletMode) text = selectedPointId ? 'Vyber bod na obvodu (poloměr)' : 'Vyber střed kružnice';
+          else if (activeTool === 'distance') text = 'Měření vzdálenosti (připravujeme)';
+          else if (activeTool === 'angle' && !isTabletMode) text = selectedPointId ? 'Vyber bod na rameni úhlu' : 'Vyber vrchol úhlu';
+          else if (activeTool === 'perpendicular' && !isTabletMode) text = 'Klikni na linku pro vytvoření kolmice';
+          if (text) content = <span>{text}</span>;
         }
+
+        if (!content) return null;
 
         return (
       <div className={`absolute left-1/2 -translate-x-1/2 z-10 rounded-full font-medium transition-all duration-300 ${
@@ -4846,39 +4885,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
           ? 'px-8 py-4 text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_24px_rgba(59,130,246,0.5)] border-2 border-blue-300/60'
           : `px-6 py-3 text-sm ${darkMode ? 'bg-[#24283b] text-[#c0caf5]' : 'bg-white text-gray-600 shadow-md border'}`
       }`} style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
-        {canvasWarning ? (
-          <span className="flex items-center gap-3">
-            <span className="relative flex size-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-300 opacity-75"></span>
-              <span className="relative inline-flex rounded-full size-3 bg-orange-400"></span>
-            </span>
-            <span className="tracking-wide">{canvasWarning}</span>
-          </span>
-        ) : animState.isActive ? (
-          <span className="flex items-center gap-2 animate-pulse">
-            <span className="size-2 rounded-full bg-blue-500"></span>
-            Rýsuji...
-          </span>
-        ) : isTabletInstruction ? (
-          <span className="flex items-center gap-3">
-            <span className="relative flex size-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full size-3 bg-white"></span>
-            </span>
-            <span className="tracking-wide">{tabletInstructionText}</span>
-          </span>
-        ) : (
-          <span>
-            {activeTool === 'move' && (selectedShapeIds.length > 0 ? `Vybráno ${selectedShapeIds.length} ${selectedShapeIds.length === 1 ? 'tvar' : selectedShapeIds.length < 5 ? 'tvary' : 'tvarů'} · Táhni pro přesun · Del smaže` : 'Klikni na bod nebo tvar · Táhni pro obdélníkový výběr · Ctrl+klik pro vícenásobný výběr')}
-            {activeTool === 'point' && 'Klikni pro vytvoření bodu'}
-            {activeTool === 'segment' && (segmentInput.active ? (selectedPointId ? `Vyber směr (fixní délka ${segmentInput.length} cm)` : 'Vyber začátek úsečky') : (selectedPointId ? 'Vyber druhý bod úsečky' : 'Vyber první bod úsečky'))}
-            {activeTool === 'line' && (selectedPointId ? 'Vyber druhý bod přímky' : 'Vyber první bod přímky')}
-            {activeTool === 'circle' && !isTabletMode && (selectedPointId ? 'Vyber bod na obvodu (poloměr)' : 'Vyber střed kružnice')}
-            {activeTool === 'distance' && 'Měření vzdálenosti (připravujeme)'}
-            {activeTool === 'angle' && !isTabletMode && (selectedPointId ? 'Vyber bod na rameni úhlu' : 'Vyber vrchol úhlu')}
-            {activeTool === 'perpendicular' && !isTabletMode && 'Klikni na linku pro vytvoření kolmice'}
-          </span>
-        )}
+        {content}
       </div>
         );
       })()}
