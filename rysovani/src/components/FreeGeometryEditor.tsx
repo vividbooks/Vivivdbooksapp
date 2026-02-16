@@ -1239,7 +1239,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     const mouseY = e.clientY - rect.top;
 
     // Citlivost zoomu
-    const zoomFactor = -e.deltaY * 0.008;
+    const zoomFactor = -e.deltaY * 0.005;
     const newScale = Math.min(Math.max(0.1, scale + zoomFactor), 5);
     
     // Zoomování směrem k myši:
@@ -1289,7 +1289,11 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       } else if (distToCenter < threshold) {
         setCircleInput(prev => ({ ...prev, isDraggingCenter: true }));
       } else {
-        setCircleInput(prev => ({ ...prev, center: { x: wx, y: wy } }));
+        // Snap to nearest point if close enough
+        const snappedPoint = getSnappingPoint(wx, wy, 30);
+        const snapX = snappedPoint ? snappedPoint.x : wx;
+        const snapY = snappedPoint ? snappedPoint.y : wy;
+        setCircleInput(prev => ({ ...prev, center: { x: snapX, y: snapY } }));
       }
       return;
     }
@@ -1312,13 +1316,16 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         // Tablet mód - krokový workflow
         if (isTabletMode) {
           if (angleTabletState.step === 'selectLine') {
-            // Krok 1: Výběr linky
+            // Krok 1: Výběr linky (s přichytáváním na body)
             const baseShape = shapes.find(s => s.id === hoveredShape.id);
             if (baseShape && ['line', 'segment', 'ray'].includes(baseShape.type)) {
+              let initPos = hoveredShape.proj;
+              const nearPt = getSnappingPoint(hoveredShape.proj.x, hoveredShape.proj.y, 25);
+              if (nearPt) initPos = { x: nearPt.x, y: nearPt.y };
               setAngleTabletState({
                 step: 'positioning',
                 selectedLineId: baseShape.id,
-                currentPos: hoveredShape.proj,
+                currentPos: initPos,
                 baseAngle: hoveredShape.angle
               });
             }
@@ -1328,13 +1335,18 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
           return;
         }
         
-        // PC mód - původní logika (jeden klik otevře popup)
+        // PC mód - původní logika (jeden klik otevře popup) s přichytáváním na body
+        let anglePos = hoveredShape.proj;
+        const nearPointAngle = getSnappingPoint(hoveredShape.proj.x, hoveredShape.proj.y, 25);
+        if (nearPointAngle) {
+          anglePos = { x: nearPointAngle.x, y: nearPointAngle.y };
+        }
         setAngleInput({
             visible: true,
             value: 45,
             vertexId: null, 
             directionId: null,
-            customVertex: hoveredShape.proj,
+            customVertex: anglePos,
             baseAngle: hoveredShape.angle,
             rotationOffset: 0,
             isMirrored: false
@@ -1475,15 +1487,17 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       // Tablet mód - speciální workflow
       if (isTabletMode) {
         if (perpTabletState.step === 'selectLine') {
-          // Krok 1: Výběr linky
+          // Krok 1: Výběr linky (s přichytáváním na body)
           if (hoveredShape) {
             const baseShape = shapes.find(s => s.id === hoveredShape.id);
             if (baseShape && ['line', 'segment', 'ray'].includes(baseShape.type)) {
-              // Přepni do positioning módu
+              let initPos = hoveredShape.proj;
+              const nearPt = getSnappingPoint(hoveredShape.proj.x, hoveredShape.proj.y, 25);
+              if (nearPt) initPos = { x: nearPt.x, y: nearPt.y };
               setPerpTabletState({
                 step: 'positioning',
                 selectedLineId: baseShape.id,
-                currentPos: hoveredShape.proj
+                currentPos: initPos
               });
             }
           }
@@ -2027,23 +2041,36 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
        currentPathRef.current.push({ x: wx, y: wy });
     }
     
-    // Tablet mód - positioning kolmice
+    // Tablet mód - positioning kolmice (with point snapping)
     if (activeTool === 'perpendicular' && isTabletMode && perpTabletState.step === 'positioning') {
       if (perpTabletState.selectedLineId && hoveredShape && hoveredShape.id === perpTabletState.selectedLineId) {
+        let pos = hoveredShape.proj;
+        // Snap to nearby point on the line
+        const nearPoint = getSnappingPoint(hoveredShape.proj.x, hoveredShape.proj.y, 25);
+        if (nearPoint) {
+          pos = { x: nearPoint.x, y: nearPoint.y };
+        }
         setPerpTabletState(prev => ({
           ...prev,
-          currentPos: hoveredShape.proj
+          currentPos: pos
         }));
       }
     }
     
-    // Tablet mód - positioning úhloměru
+    // Tablet mód - positioning úhloměru (with point snapping)
     if (activeTool === 'angle' && isTabletMode && angleTabletState.step === 'positioning') {
       if (angleTabletState.selectedLineId && hoveredShape && hoveredShape.id === angleTabletState.selectedLineId) {
+        let pos = hoveredShape.proj;
+        let angle = hoveredShape.angle;
+        // Snap to nearby point on the line
+        const nearPoint = getSnappingPoint(hoveredShape.proj.x, hoveredShape.proj.y, 25);
+        if (nearPoint) {
+          pos = { x: nearPoint.x, y: nearPoint.y };
+        }
         setAngleTabletState(prev => ({
           ...prev,
-          currentPos: hoveredShape.proj,
-          baseAngle: hoveredShape.angle
+          currentPos: pos,
+          baseAngle: angle
         }));
       }
     }
@@ -2064,7 +2091,10 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         return;
       }
       if (circleInput.isDraggingCenter) {
-        setCircleInput(prev => ({ ...prev, center: { x: wx, y: wy } }));
+        const snappedPoint = getSnappingPoint(wx, wy, 25);
+        const snapX = snappedPoint ? snappedPoint.x : wx;
+        const snapY = snappedPoint ? snappedPoint.y : wy;
+        setCircleInput(prev => ({ ...prev, center: { x: snapX, y: snapY } }));
         return;
       }
     }
