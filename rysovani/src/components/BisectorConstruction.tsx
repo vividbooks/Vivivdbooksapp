@@ -240,14 +240,12 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
     if (isAnimating && animProgress < 1) {
       animationFrameRef.current = requestAnimationFrame(() => {
         // Různé rychlosti animace podle kroků
-        let increment = 0.008; // Výchozí rychlost
+        let increment = 0.025; // Výchozí rychlost
         
         if (currentStep === 1 || currentStep === 3) {
-          // Statická kružítka - 4x pomalejší
-          increment = 0.002;
+          increment = 0.008;
         } else if (currentStep === 2 || currentStep === 4) {
-          // Točící se kružítka při rýsování
-          increment = 0.005;
+          increment = 0.015;
         }
         
         setAnimProgress(prev => Math.min(prev + increment, 1));
@@ -265,7 +263,9 @@ export function BisectorConstruction({ onBack, darkMode, onDarkModeChange }: Bis
 
   // Kreslení mřížky
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    const gridSize = 50 * scale;
+    // Match editor grid: 50px base, but ensure minimum ~35px visual spacing
+    let gridSize = 50 * scale;
+    while (gridSize < 35) gridSize *= 2;
     ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 

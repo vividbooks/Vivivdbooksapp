@@ -267,12 +267,12 @@ export function InteractiveTriangleConstruction({ onBack, darkMode, onDarkModeCh
   useEffect(() => {
     if (isAnimating && animProgress < 1 && !waitingForInput) {
       animationFrameRef.current = requestAnimationFrame(() => {
-        let increment = 0.008;
+        let increment = 0.025;
         
         if (currentStep === 1 || currentStep === 3) {
-          increment = 0.002;
+          increment = 0.008;
         } else if (currentStep === 2 || currentStep === 4) {
-          increment = 0.005;
+          increment = 0.015;
         }
         
         setAnimProgress(prev => Math.min(prev + increment, 1));
@@ -320,7 +320,8 @@ export function InteractiveTriangleConstruction({ onBack, darkMode, onDarkModeCh
   };
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    const gridSize = 50 * scale;
+    let gridSize = 50 * scale;
+    while (gridSize < 35) gridSize *= 2;
     ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 

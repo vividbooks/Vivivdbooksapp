@@ -347,7 +347,7 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
   useEffect(() => {
     if (isAnimating && animProgress < 1 && !waitingForInput) {
       animationFrameRef.current = requestAnimationFrame(() => {
-        setAnimProgress(prev => Math.min(prev + 0.008, 1));
+        setAnimProgress(prev => Math.min(prev + 0.025, 1));
       });
     } else if (animProgress >= 1) {
       setIsAnimating(false);
@@ -406,7 +406,8 @@ export function AngleTriangleConstruction({ onBack, darkMode, onDarkModeChange }
   };
 
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    const gridSize = 50 * scale;
+    let gridSize = 50 * scale;
+    while (gridSize < 35) gridSize *= 2;
     ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 

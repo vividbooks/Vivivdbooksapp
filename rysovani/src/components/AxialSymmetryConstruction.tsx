@@ -197,7 +197,7 @@ export function AxialSymmetryConstruction({ onBack, darkMode, onDarkModeChange }
           return 1;
         }
         
-        let increment = 0.008;
+        let increment = 0.025;
         
         return Math.min(prev + increment, 1);
       });
@@ -218,7 +218,8 @@ export function AxialSymmetryConstruction({ onBack, darkMode, onDarkModeChange }
 
   // Kreslení mřížky
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
-    const gridSize = 50 * scale;
+    let gridSize = 50 * scale;
+    while (gridSize < 35) gridSize *= 2;
     ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 

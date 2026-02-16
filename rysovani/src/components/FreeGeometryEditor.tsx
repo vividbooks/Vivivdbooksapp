@@ -3862,11 +3862,12 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   };
 
   const drawGrid = (ctx: CanvasRenderingContext2D, offset: {x:number, y:number}, scale: number) => {
-    const gridSize = 50 * scale;
+    // 50px base grid, ensure minimum ~35px visual spacing at any zoom
+    let gridSize = 50 * scale;
+    while (gridSize < 35) gridSize *= 2;
     ctx.strokeStyle = darkMode ? 'rgba(125, 107, 194, 0.15)' : 'rgba(229, 231, 235, 0.8)';
     ctx.lineWidth = 1;
 
-    // Vypočítat posun mřížky tak, aby "jezdila" s offsetem
     const startX = offset.x % gridSize;
     const startY = offset.y % gridSize;
 
