@@ -318,9 +318,11 @@ function DrawingCard({ item }: { item: DrawingItem }) {
   const navigate = useNavigate();
   const { Illustration } = item;
   return (
-    <button
+    <div
       onClick={() => navigate(`/rysovani?view=${item.view}`)}
       onTouchEnd={(e) => { e.preventDefault(); navigate(`/rysovani?view=${item.view}`); }}
+      role="button"
+      tabIndex={0}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -334,6 +336,7 @@ function DrawingCard({ item }: { item: DrawingItem }) {
         transition: 'all 200ms',
         cursor: 'pointer',
         width: '100%',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.02)';
@@ -392,7 +395,7 @@ function DrawingCard({ item }: { item: DrawingItem }) {
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -400,9 +403,11 @@ function ConstructionCard({ item }: { item: ConstructionItem }) {
   const navigate = useNavigate();
   const Icon = item.icon;
   return (
-    <button
+    <div
       onClick={() => navigate(`/rysovani?view=${item.view}`)}
       onTouchEnd={(e) => { e.preventDefault(); navigate(`/rysovani?view=${item.view}`); }}
+      role="button"
+      tabIndex={0}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -417,6 +422,7 @@ function ConstructionCard({ item }: { item: ConstructionItem }) {
         transition: 'all 200ms',
         cursor: 'pointer',
         width: '100%',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.02)';
@@ -469,7 +475,7 @@ function ConstructionCard({ item }: { item: ConstructionItem }) {
           <ArrowRight size={16} style={{ color: '#4d49f3', opacity: 0.5 }} />
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 

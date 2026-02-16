@@ -13,9 +13,11 @@ export function ObjectCard({ object }: Props) {
   const navigate = useNavigate();
 
   return (
-    <button
+    <div
       onClick={() => navigate(object.path)}
       onTouchEnd={(e) => { e.preventDefault(); navigate(object.path); }}
+      role="button"
+      tabIndex={0}
       className="flex flex-col text-left w-full"
       style={{
         borderRadius: '24px',
@@ -25,6 +27,7 @@ export function ObjectCard({ object }: Props) {
         overflow: 'hidden',
         transition: 'all 200ms',
         cursor: 'pointer',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.02)';
@@ -83,6 +86,6 @@ export function ObjectCard({ object }: Props) {
           />
         </div>
       </div>
-    </button>
+    </div>
   );
 }

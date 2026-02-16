@@ -44,10 +44,11 @@ export function ExerciseTile({ object, taskType }: Props) {
   const setupPath = `/cviceni/${object.id}/${taskType}`;
 
   return (
-    <button
-      type="button"
+    <div
       onClick={() => navigate(setupPath)}
       onTouchEnd={(e) => { e.preventDefault(); navigate(setupPath); }}
+      role="button"
+      tabIndex={0}
       className="flex flex-col text-left w-full"
       style={{
         borderRadius: '24px',
@@ -57,6 +58,7 @@ export function ExerciseTile({ object, taskType }: Props) {
         overflow: 'hidden',
         transition: 'all 200ms',
         cursor: 'pointer',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.02)';
@@ -134,6 +136,6 @@ export function ExerciseTile({ object, taskType }: Props) {
           />
         </div>
       </div>
-    </button>
+    </div>
   );
 }

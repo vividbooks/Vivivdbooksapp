@@ -4724,7 +4724,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             }
           }}
           className="absolute left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
           Narýsovat
@@ -4748,7 +4748,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             });
           }}
           className="absolute left-1/2 -translate-x-1/2 z-10 px-6 py-3 rounded-full text-sm font-bold bg-orange-500 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
           Umístit úhloměr
@@ -4819,7 +4819,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             });
           }}
           className="absolute left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-          style={{ bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
         >
           <Check className="size-5" />
           {`Narýsovat (${(circleTabletState.radius / PIXELS_PER_CM).toFixed(1)} cm)`

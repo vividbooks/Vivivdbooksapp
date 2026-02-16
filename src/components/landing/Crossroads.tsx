@@ -18,6 +18,7 @@ const cardStyle: React.CSSProperties = {
   minWidth: '0',
   flex: '1 1 320px',
   margin: '12px',
+  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
 };
 
 export function Crossroads() {
@@ -76,10 +77,12 @@ export function Crossroads() {
         }}
       >
         {/* Card 1: Rýsování a konstrukce */}
-        <button
+        <div
           style={cardStyle}
           onClick={() => navigate('/rysovani-app')}
           onTouchEnd={(e) => { e.preventDefault(); navigate('/rysovani-app'); }}
+          role="button"
+          tabIndex={0}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.02)';
             e.currentTarget.style.boxShadow = '0 16px 32px -8px rgba(77,73,243,0.18), 0 6px 12px -4px rgba(77,73,243,0.1)';
@@ -159,13 +162,15 @@ export function Crossroads() {
               <ArrowRight size={16} />
             </div>
           </div>
-        </button>
+        </div>
 
         {/* Card 2: Tělesa, rovinné útvary a cvičení */}
-        <button
+        <div
           style={cardStyle}
           onClick={() => navigate('/telesa-app')}
           onTouchEnd={(e) => { e.preventDefault(); navigate('/telesa-app'); }}
+          role="button"
+          tabIndex={0}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.02)';
             e.currentTarget.style.boxShadow = '0 16px 32px -8px rgba(77,73,243,0.18), 0 6px 12px -4px rgba(77,73,243,0.1)';
@@ -245,7 +250,7 @@ export function Crossroads() {
               <ArrowRight size={16} />
             </div>
           </div>
-        </button>
+        </div>
       </div>
     </div>
   );
