@@ -259,6 +259,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   const nearestIntersectionRef = useRef<{x: number, y: number} | null>(null); // Intersection snap indicator for visual feedback
   const mouseMoveThrottleRef = useRef(false); // Throttle flag for conditional throttling
   const lastTouchTimeRef = useRef<number>(0); // Timestamp posledniho touch eventu pro prevenci double-tap
+  const pinchRef = useRef<{ active: boolean; lastDist: number; lastCenter: { x: number; y: number } }>({ active: false, lastDist: 0, lastCenter: { x: 0, y: 0 } });
   const [visualEffects, setVisualEffects] = useState<VisualEffect[]>([]);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [showMeasurements, setShowMeasurements] = useState(false); // Toggle pro zobrazení měření
@@ -2195,7 +2196,23 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     // Zaznamej cas touch eventu
     lastTouchTimeRef.current = Date.now();
     
-    if (e.touches.length > 0) {
+    // Two-finger gesture: pinch-to-zoom & pan
+    if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.sqrt(Math.pow(t2.clientX - t1.clientX, 2) + Math.pow(t2.clientY - t1.clientY, 2));
+      const cx = (t1.clientX + t2.clientX) / 2;
+      const cy = (t1.clientY + t2.clientY) / 2;
+      pinchRef.current = { active: true, lastDist: dist, lastCenter: { x: cx, y: cy } };
+      // Cancel any single-finger action in progress
+      if (draggedPointId) setDraggedPointId(null);
+      if (isPanning.current) isPanning.current = false;
+      if (groupDragRef.current) groupDragRef.current = null;
+      if (marqueeRef.current) marqueeRef.current = null;
+      return;
+    }
+    
+    if (e.touches.length === 1 && !pinchRef.current.active) {
       const touch = e.touches[0];
       const fakeEvent = {
         clientX: touch.clientX,
@@ -2214,7 +2231,41 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     // Prevent default to stop scrolling
     e.preventDefault(); 
     
-    if (e.touches.length > 0) {
+    // Two-finger gesture: pinch-to-zoom & pan
+    if (e.touches.length === 2 && pinchRef.current.active) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.sqrt(Math.pow(t2.clientX - t1.clientX, 2) + Math.pow(t2.clientY - t1.clientY, 2));
+      const cx = (t1.clientX + t2.clientX) / 2;
+      const cy = (t1.clientY + t2.clientY) / 2;
+      
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        // Pinch zoom towards the center of the two fingers
+        const scaleRatio = dist / pinchRef.current.lastDist;
+        const newScale = Math.min(Math.max(0.1, scale * scaleRatio), 5);
+        
+        const centerX = cx - rect.left;
+        const centerY = cy - rect.top;
+        const worldX = (centerX - offset.x) / scale;
+        const worldY = (centerY - offset.y) / scale;
+        const newOffsetX = centerX - worldX * newScale;
+        const newOffsetY = centerY - worldY * newScale;
+        
+        // Two-finger pan (movement of the center point)
+        const panDx = cx - pinchRef.current.lastCenter.x;
+        const panDy = cy - pinchRef.current.lastCenter.y;
+        
+        setScale(newScale);
+        setOffset({ x: newOffsetX + panDx, y: newOffsetY + panDy });
+      }
+      
+      pinchRef.current.lastDist = dist;
+      pinchRef.current.lastCenter = { x: cx, y: cy };
+      return;
+    }
+    
+    if (e.touches.length === 1 && !pinchRef.current.active) {
       const touch = e.touches[0];
       const fakeEvent = {
         clientX: touch.clientX,
@@ -2229,6 +2280,15 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+      // If pinch gesture was active and fingers are lifted
+      if (pinchRef.current.active) {
+        if (e.touches.length < 2) {
+          pinchRef.current.active = false;
+        }
+        // Don't trigger mouseUp during/after pinch
+        if (e.touches.length === 0) return;
+        return;
+      }
       handleMouseUp();
   };
 
@@ -4322,9 +4382,50 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
              {/* Separator */}
              <div className="h-8"></div>
 
-             {/* Bottom: Trash */}
+             {/* Bottom: Trash / Delete selection */}
+             {(selection || selectedShapeIds.length > 0) ? (
+             <button
+                 onClick={() => {
+                   if (selectedShapeIds.length > 0) {
+                     const shapeIdsToDelete = new Set(selectedShapeIds);
+                     const pointIdsToDelete = new Set<string>();
+                     shapes.forEach(s => { if (shapeIdsToDelete.has(s.id)) s.points.forEach(pid => pointIdsToDelete.add(pid)); });
+                     setShapes(prev => prev.filter(s => !shapeIdsToDelete.has(s.id)));
+                     const remainingShapes = shapes.filter(s => !shapeIdsToDelete.has(s.id));
+                     const usedPointIds = new Set<string>();
+                     remainingShapes.forEach(s => s.points.forEach(pid => usedPointIds.add(pid)));
+                     setPoints(prev => prev.filter(p => !pointIdsToDelete.has(p.id) || usedPointIds.has(p.id)));
+                     setSelectedShapeIds([]);
+                   } else if (selection) {
+                     deletePoint(selection);
+                   }
+                 }}
+                 onTouchEnd={(e) => {
+                   e.preventDefault();
+                   e.stopPropagation();
+                   if (selectedShapeIds.length > 0) {
+                     const shapeIdsToDelete = new Set(selectedShapeIds);
+                     const pointIdsToDelete = new Set<string>();
+                     shapes.forEach(s => { if (shapeIdsToDelete.has(s.id)) s.points.forEach(pid => pointIdsToDelete.add(pid)); });
+                     setShapes(prev => prev.filter(s => !shapeIdsToDelete.has(s.id)));
+                     const remainingShapes = shapes.filter(s => !shapeIdsToDelete.has(s.id));
+                     const usedPointIds = new Set<string>();
+                     remainingShapes.forEach(s => s.points.forEach(pid => usedPointIds.add(pid)));
+                     setPoints(prev => prev.filter(p => !pointIdsToDelete.has(p.id) || usedPointIds.has(p.id)));
+                     setSelectedShapeIds([]);
+                   } else if (selection) {
+                     deletePoint(selection);
+                   }
+                 }}
+                 className="w-12 flex flex-col items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors group/trash relative py-2"
+             >
+                 <Trash2 className="w-5 h-5" />
+                 <span className="text-[9px] font-bold mt-0.5 leading-tight">výběr</span>
+             </button>
+             ) : (
              <button
                  onClick={clearAll}
+                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); clearAll(); }}
                  className="w-12 h-12 flex items-center justify-center rounded-xl text-black hover:bg-red-50 hover:text-red-500 transition-colors group/trash relative"
              >
                  <Trash2 className="w-6 h-6" />
@@ -4333,6 +4434,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
                    Vymazat
                  </div>
              </button>
+             )}
 
          </div>
       </div>

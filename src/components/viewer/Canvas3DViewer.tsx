@@ -38,6 +38,7 @@ export function Canvas3DViewer({
   const [zoom, setZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
   const animationRef = useRef<number>();
   const [forceRedraw, setForceRedraw] = useState(0);
 
@@ -202,25 +203,54 @@ export function Canvas3DViewer({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // Touch support
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setLastMouse({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-    }
-  };
+  // Touch support - use native listeners with { passive: false } to prevent page scroll
+  const touchLastRef = useRef({ x: 0, y: 0 });
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    setRotation((r) => ({
-      x: r.x + (touch.clientY - lastMouse.y) * 0.008,
-      y: r.y + (touch.clientX - lastMouse.x) * 0.008,
-    }));
-    setLastMouse({ x: touch.clientX, y: touch.clientY });
-  };
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  const handleTouchEnd = () => setIsDragging(false);
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        isDraggingRef.current = true;
+        setIsDragging(true);
+        touchLastRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        setLastMouse({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDraggingRef.current || e.touches.length !== 1) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchLastRef.current.x;
+      const dy = touch.clientY - touchLastRef.current.y;
+      touchLastRef.current = { x: touch.clientX, y: touch.clientY };
+      setLastMouse({ x: touch.clientX, y: touch.clientY });
+      setRotation((r) => ({
+        x: r.x + dy * 0.008,
+        y: r.y + dx * 0.008,
+      }));
+    };
+
+    const onTouchEnd = () => {
+      isDraggingRef.current = false;
+      setIsDragging(false);
+    };
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd);
+    canvas.addEventListener('touchcancel', onTouchEnd);
+
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, []);
 
   // ── Effects ──────────────────────────────────────────────
 
@@ -265,10 +295,7 @@ export function Canvas3DViewer({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{ minHeight: '400px', backgroundColor }}
+      style={{ minHeight: '400px', backgroundColor, touchAction: 'none' }}
     />
   );
 }
