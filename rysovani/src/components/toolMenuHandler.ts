@@ -13,7 +13,7 @@ export const handleToolMenuClick = (
   if (toolId.startsWith('__popup__')) {
     // Special popup triggers
     if (toolId === '__popup__circle_fixed') {
-      setCircleInput(prev => ({ ...prev, visible: true }));
+      setCircleInput(prev => ({ ...prev, visible: true, center: null, isDraggingCenter: false, isDraggingHandle: false }));
     } else if (toolId === '__popup__segment_fixed') {
       if (setSegmentInput) {
         setSegmentInput(prev => ({ ...prev, visible: true }));
