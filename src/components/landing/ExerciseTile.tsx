@@ -115,20 +115,7 @@ export function ExerciseTile({ object, taskType }: Props) {
         <p style={{ fontSize: '13px', fontWeight: 400, color: '#4e5871', opacity: 0.7, lineHeight: '20px', marginBottom: '16px' }}>
           {{ objem: 'Vypočítejte objem.', povrch: 'Vypočítejte povrch.', obvod: 'Vypočítejte obvod.', obsah: 'Vypočítejte obsah.' }[taskType]}
         </p>
-        <div className="flex items-center justify-between" style={{ marginTop: 'auto' }}>
-          <span
-            style={{
-              display: 'inline-block',
-              padding: '4px 10px',
-              borderRadius: '9999px',
-              background: 'rgba(255,255,255,0.7)',
-              color: '#4d49f3',
-              fontSize: '12px',
-              fontWeight: 400,
-            }}
-          >
-            {object.grade}
-          </span>
+        <div className="flex items-center justify-end" style={{ marginTop: 'auto' }}>
           <ArrowRight
             className="arrow-icon"
             size={16}

@@ -174,7 +174,7 @@ const squareObvodTutorial: TutorialDef = {
       title: 'Vzorec pro obvod čtverce',
       explanation:
         'Když má čtverec stranu <strong>a</strong>, stačí sečíst délky všech 4 stran:',
-      formula: 'O = a + a + a + a = 4 × a',
+      formula: 'O = a + a + a + a = 4 · a',
       squareSide: 5,
       anim: 'add-sides',
     },
@@ -182,7 +182,7 @@ const squareObvodTutorial: TutorialDef = {
       title: 'Příklad: a = 5 cm',
       explanation:
         'Máme čtverec se stranou <strong>a = 5 cm</strong>. Dosadíme do vzorce:',
-      formula: 'O = 4 × 5 = 20 cm',
+      formula: 'O = 4 · 5 = 20 cm',
       squareSide: 5,
       anim: 'trace-perimeter',
     },
@@ -190,26 +190,26 @@ const squareObvodTutorial: TutorialDef = {
       title: 'Zkus to sám!',
       explanation: 'Vypočítej obvod čtverce se stranou <strong>a = 7 cm</strong>.',
       squareSide: 7,
-      formula: 'O = 4 × a',
+      formula: 'O = 4 · a',
       anim: 'none',
       question: {
         prompt: 'Jaký je obvod?',
         correctAnswer: 28,
         unit: 'cm',
-        hint: 'Dosaď a = 7 do vzorce O = 4 × a',
+        hint: 'Dosaď a = 7 do vzorce O = 4 · a',
       },
     },
     {
       title: 'Další příklad',
       explanation: 'Vypočítej obvod čtverce se stranou <strong>a = 12 cm</strong>.',
       squareSide: 12,
-      formula: 'O = 4 × a',
+      formula: 'O = 4 · a',
       anim: 'none',
       question: {
         prompt: 'Jaký je obvod?',
         correctAnswer: 48,
         unit: 'cm',
-        hint: 'O = 4 × 12 = ?',
+        hint: 'O = 4 · 12 = ?',
       },
     },
   ],
@@ -230,7 +230,7 @@ const squareObsahTutorial: TutorialDef = {
     {
       title: 'Představ si mřížku',
       explanation:
-        'Když do čtverce se stranou 5 cm nakreslíš mřížku 1×1 cm, spočítáš <strong>25 malých čtverečků</strong>. To je obsah!',
+        'Když do čtverce se stranou 5 cm nakreslíš mřížku 1·1 cm, spočítáš <strong>25 malých čtverečků</strong>. To je obsah!',
       squareSide: 5,
       anim: 'fill-grid',
     },
@@ -238,7 +238,7 @@ const squareObsahTutorial: TutorialDef = {
       title: 'Vzorec pro obsah čtverce',
       explanation:
         'Nemusíš čtverečky počítat ručně. Stačí vynásobit stranu samu sebou:',
-      formula: 'S = a × a = a²',
+      formula: 'S = a · a = a²',
       squareSide: 5,
       anim: 'fill-area',
     },
@@ -246,7 +246,7 @@ const squareObsahTutorial: TutorialDef = {
       title: 'Příklad: a = 5 cm',
       explanation:
         'Čtverec se stranou <strong>a = 5 cm</strong>:',
-      formula: 'S = 5 × 5 = 25 cm²',
+      formula: 'S = 5 · 5 = 25 cm²',
       squareSide: 5,
       anim: 'fill-grid',
     },
@@ -254,26 +254,26 @@ const squareObsahTutorial: TutorialDef = {
       title: 'Zkus to sám!',
       explanation: 'Vypočítej obsah čtverce se stranou <strong>a = 6 cm</strong>.',
       squareSide: 6,
-      formula: 'S = a × a',
+      formula: 'S = a · a',
       anim: 'none',
       question: {
         prompt: 'Jaký je obsah?',
         correctAnswer: 36,
         unit: 'cm²',
-        hint: 'Dosaď a = 6 do vzorce S = a × a',
+        hint: 'Dosaď a = 6 do vzorce S = a · a',
       },
     },
     {
       title: 'Další příklad',
       explanation: 'Vypočítej obsah čtverce se stranou <strong>a = 9 cm</strong>.',
       squareSide: 9,
-      formula: 'S = a × a',
+      formula: 'S = a · a',
       anim: 'none',
       question: {
         prompt: 'Jaký je obsah?',
         correctAnswer: 81,
         unit: 'cm²',
-        hint: 'S = 9 × 9 = ?',
+        hint: 'S = 9 · 9 = ?',
       },
     },
   ],
@@ -287,7 +287,7 @@ const cubeObjemTutorial: TutorialDef = {
     {
       title: 'Co je objem?',
       explanation:
-        'Objem říká, <strong>kolik prostoru</strong> těleso zabírá — kolik malých krychlí (1×1×1 cm) se dovnitř vejde.',
+        'Objem říká, <strong>kolik prostoru</strong> těleso zabírá — kolik malých krychlí (1·1·1 cm) se dovnitř vejde.',
       cubeEdge: 3,
       cubeAnim: 'show-cube',
     },
@@ -301,7 +301,7 @@ const cubeObjemTutorial: TutorialDef = {
     {
       title: 'Vyplň krychli malými kostkami',
       explanation:
-        'Krychle se stranou 3 cm pojme <strong>3 × 3 × 3 = 27 malých kostek</strong>. Sleduj, jak se plní vrstva po vrstvě.',
+        'Krychle se stranou 3 cm pojme <strong>3 · 3 · 3 = 27 malých kostek</strong>. Sleduj, jak se plní vrstva po vrstvě.',
       cubeEdge: 3,
       cubeAnim: 'fill-layers',
     },
@@ -309,7 +309,7 @@ const cubeObjemTutorial: TutorialDef = {
       title: 'Vzorec pro objem krychle',
       explanation:
         'Nemusíš kostky počítat ručně. Stačí vynásobit hranu třikrát:',
-      formula: 'V = a × a × a = a³',
+      formula: 'V = a · a · a = a³',
       cubeEdge: 3,
       cubeAnim: 'show-cube',
     },
@@ -317,7 +317,7 @@ const cubeObjemTutorial: TutorialDef = {
       title: 'Příklad: a = 3 cm',
       explanation:
         'Krychle s hranou <strong>a = 3 cm</strong>:',
-      formula: 'V = 3 × 3 × 3 = 27 cm³',
+      formula: 'V = 3 · 3 · 3 = 27 cm³',
       cubeEdge: 3,
       cubeAnim: 'fill-layers',
     },
@@ -325,26 +325,26 @@ const cubeObjemTutorial: TutorialDef = {
       title: 'Zkus to sám!',
       explanation: 'Vypočítej objem krychle s hranou <strong>a = 4 cm</strong>.',
       cubeEdge: 4,
-      formula: 'V = a × a × a',
+      formula: 'V = a · a · a',
       cubeAnim: 'show-cube',
       question: {
         prompt: 'Jaký je objem?',
         correctAnswer: 64,
         unit: 'cm³',
-        hint: 'Dosaď a = 4 → V = 4 × 4 × 4',
+        hint: 'Dosaď a = 4 → V = 4 · 4 · 4',
       },
     },
     {
       title: 'Další příklad',
       explanation: 'Vypočítej objem krychle s hranou <strong>a = 5 cm</strong>.',
       cubeEdge: 5,
-      formula: 'V = a × a × a',
+      formula: 'V = a · a · a',
       cubeAnim: 'show-cube',
       question: {
         prompt: 'Jaký je objem?',
         correctAnswer: 125,
         unit: 'cm³',
-        hint: 'V = 5 × 5 × 5 = ?',
+        hint: 'V = 5 · 5 · 5 = ?',
       },
     },
   ],
@@ -370,7 +370,7 @@ const cubePovrchuTutorial: TutorialDef = {
     {
       title: 'Plocha jedné stěny',
       explanation:
-        'Jedna stěna je čtverec se stranou <strong>a</strong>, takže její plocha je <strong>a × a = a²</strong>. Krychle má 6 takových stěn.',
+        'Jedna stěna je čtverec se stranou <strong>a</strong>, takže její plocha je <strong>a · a = a²</strong>. Krychle má 6 takových stěn.',
       cubeEdge: 3, cubeAnim: 'highlight-faces',
     },
     {
@@ -429,29 +429,29 @@ const rectObvodTutorial: TutorialDef = {
       title: 'Vzorec pro obvod obdélníku',
       explanation:
         'Sečteme všechny 4 strany: a + b + a + b, neboli:',
-      formula: 'O = 2 × (a + b)',
+      formula: 'O = 2 · (a + b)',
       rectA: 6, rectB: 4, rectAnim: 'add-sides',
     },
     {
       title: 'Příklad: a = 6 cm, b = 4 cm',
       explanation:
         'Obdélník se stranami <strong>a = 6 cm</strong> a <strong>b = 4 cm</strong>:',
-      formula: 'O = 2 × (6 + 4) = 2 × 10 = 20 cm',
+      formula: 'O = 2 · (6 + 4) = 2 · 10 = 20 cm',
       rectA: 6, rectB: 4, rectAnim: 'trace-perimeter',
     },
     {
       title: 'Zkus to sám!',
       explanation: 'Vypočítej obvod obdélníku se stranami <strong>a = 8 cm</strong> a <strong>b = 3 cm</strong>.',
-      rectA: 8, rectB: 3, formula: 'O = 2 × (a + b)',
+      rectA: 8, rectB: 3, formula: 'O = 2 · (a + b)',
       rectAnim: 'none',
-      question: { prompt: 'Jaký je obvod?', correctAnswer: 22, unit: 'cm', hint: 'O = 2 × (8 + 3) = 2 × 11 = ?' },
+      question: { prompt: 'Jaký je obvod?', correctAnswer: 22, unit: 'cm', hint: 'O = 2 · (8 + 3) = 2 · 11 = ?' },
     },
     {
       title: 'Další příklad',
       explanation: 'Vypočítej obvod obdélníku se stranami <strong>a = 10 cm</strong> a <strong>b = 5 cm</strong>.',
-      rectA: 10, rectB: 5, formula: 'O = 2 × (a + b)',
+      rectA: 10, rectB: 5, formula: 'O = 2 · (a + b)',
       rectAnim: 'none',
-      question: { prompt: 'Jaký je obvod?', correctAnswer: 30, unit: 'cm', hint: 'O = 2 × (10 + 5) = ?' },
+      question: { prompt: 'Jaký je obvod?', correctAnswer: 30, unit: 'cm', hint: 'O = 2 · (10 + 5) = ?' },
     },
   ],
 };
@@ -470,36 +470,36 @@ const rectObsahTutorial: TutorialDef = {
     {
       title: 'Představ si mřížku',
       explanation:
-        'Do obdélníku 6 × 4 cm se vejde <strong>24 čtverečků</strong> o straně 1 cm. To je obsah!',
+        'Do obdélníku 6 · 4 cm se vejde <strong>24 čtverečků</strong> o straně 1 cm. To je obsah!',
       rectA: 6, rectB: 4, rectAnim: 'fill-grid',
     },
     {
       title: 'Vzorec pro obsah obdélníku',
       explanation:
         'Stačí vynásobit stranu <strong>a</strong> stranou <strong>b</strong>:',
-      formula: 'S = a × b',
+      formula: 'S = a · b',
       rectA: 6, rectB: 4, rectAnim: 'fill-area',
     },
     {
       title: 'Příklad: a = 6, b = 4',
       explanation:
         'Obdélník se stranami <strong>a = 6 cm</strong> a <strong>b = 4 cm</strong>:',
-      formula: 'S = 6 × 4 = 24 cm²',
+      formula: 'S = 6 · 4 = 24 cm²',
       rectA: 6, rectB: 4, rectAnim: 'fill-grid',
     },
     {
       title: 'Zkus to sám!',
       explanation: 'Vypočítej obsah obdélníku se stranami <strong>a = 7 cm</strong> a <strong>b = 5 cm</strong>.',
-      rectA: 7, rectB: 5, formula: 'S = a × b',
+      rectA: 7, rectB: 5, formula: 'S = a · b',
       rectAnim: 'none',
-      question: { prompt: 'Jaký je obsah?', correctAnswer: 35, unit: 'cm²', hint: 'S = 7 × 5 = ?' },
+      question: { prompt: 'Jaký je obsah?', correctAnswer: 35, unit: 'cm²', hint: 'S = 7 · 5 = ?' },
     },
     {
       title: 'Další příklad',
       explanation: 'Vypočítej obsah obdélníku se stranami <strong>a = 9 cm</strong> a <strong>b = 4 cm</strong>.',
-      rectA: 9, rectB: 4, formula: 'S = a × b',
+      rectA: 9, rectB: 4, formula: 'S = a · b',
       rectAnim: 'none',
-      question: { prompt: 'Jaký je obsah?', correctAnswer: 36, unit: 'cm²', hint: 'S = 9 × 4 = ?' },
+      question: { prompt: 'Jaký je obsah?', correctAnswer: 36, unit: 'cm²', hint: 'S = 9 · 4 = ?' },
     },
   ],
 };
@@ -514,7 +514,7 @@ const cuboidObjemTutorial: TutorialDef = {
     {
       title: 'Co je objem?',
       explanation:
-        'Objem říká, <strong>kolik prostoru</strong> těleso zabírá — kolik malých kostek 1×1×1 cm se dovnitř vejde.',
+        'Objem říká, <strong>kolik prostoru</strong> těleso zabírá — kolik malých kostek 1·1·1 cm se dovnitř vejde.',
       cuboidA: 4, cuboidB: 3, cuboidC: 2, cuboidAnim: 'show-cuboid',
     },
     {
@@ -526,36 +526,36 @@ const cuboidObjemTutorial: TutorialDef = {
     {
       title: 'Vyplň kvádr malými kostkami',
       explanation:
-        'Kvádr 4 × 3 × 2 pojme <strong>4 × 3 × 2 = 24 kostek</strong>. Sleduj, jak se plní.',
+        'Kvádr 4 · 3 · 2 pojme <strong>4 · 3 · 2 = 24 kostek</strong>. Sleduj, jak se plní.',
       cuboidA: 4, cuboidB: 3, cuboidC: 2, cuboidAnim: 'fill-layers',
     },
     {
       title: 'Vzorec pro objem kvádru',
       explanation:
         'Stačí vynásobit všechny 3 rozměry:',
-      formula: 'V = a × b × c',
+      formula: 'V = a · b · c',
       cuboidA: 4, cuboidB: 3, cuboidC: 2, cuboidAnim: 'show-cuboid',
     },
     {
       title: 'Příklad: a = 4, b = 3, c = 2',
       explanation:
-        'Kvádr s rozměry <strong>4 × 3 × 2 cm</strong>:',
-      formula: 'V = 4 × 3 × 2 = 24 cm³',
+        'Kvádr s rozměry <strong>4 · 3 · 2 cm</strong>:',
+      formula: 'V = 4 · 3 · 2 = 24 cm³',
       cuboidA: 4, cuboidB: 3, cuboidC: 2, cuboidAnim: 'fill-layers',
     },
     {
       title: 'Zkus to sám!',
       explanation: 'Vypočítej objem kvádru s rozměry <strong>a = 5, b = 3, c = 2 cm</strong>.',
-      cuboidA: 5, cuboidB: 3, cuboidC: 2, formula: 'V = a × b × c',
+      cuboidA: 5, cuboidB: 3, cuboidC: 2, formula: 'V = a · b · c',
       cuboidAnim: 'show-cuboid',
-      question: { prompt: 'Jaký je objem?', correctAnswer: 30, unit: 'cm³', hint: 'V = 5 × 3 × 2 = ?' },
+      question: { prompt: 'Jaký je objem?', correctAnswer: 30, unit: 'cm³', hint: 'V = 5 · 3 · 2 = ?' },
     },
     {
       title: 'Další příklad',
       explanation: 'Vypočítej objem kvádru s rozměry <strong>a = 6, b = 4, c = 3 cm</strong>.',
-      cuboidA: 6, cuboidB: 4, cuboidC: 3, formula: 'V = a × b × c',
+      cuboidA: 6, cuboidB: 4, cuboidC: 3, formula: 'V = a · b · c',
       cuboidAnim: 'show-cuboid',
-      question: { prompt: 'Jaký je objem?', correctAnswer: 72, unit: 'cm³', hint: 'V = 6 × 4 × 3 = ?' },
+      question: { prompt: 'Jaký je objem?', correctAnswer: 72, unit: 'cm³', hint: 'V = 6 · 4 · 3 = ?' },
     },
   ],
 };
@@ -681,21 +681,21 @@ const triObsahTutorial: TutorialDef = {
     {
       title: 'Polovina obdélníku',
       explanation:
-        'Pravoúhlý trojúhelník je <strong>přesně polovina obdélníku</strong> se stranami a × b. Podívej — diagonála obdélníku je přepona!',
+        'Pravoúhlý trojúhelník je <strong>přesně polovina obdélníku</strong> se stranami a · b. Podívej — diagonála obdélníku je přepona!',
       triA: 6, triB: 4, triAnim: 'fill-grid',
     },
     {
       title: 'Vzorec pro obsah trojúhelníku',
       explanation:
         'Obsah je polovina základny krát výška:',
-      formula: 'S = a × v / 2',
+      formula: 'S = a · v : 2',
       triA: 6, triB: 4, triAnim: 'fill-area',
     },
     {
       title: 'Příklad: a = 6, v = 4',
       explanation:
         'Trojúhelník se základnou <strong>a = 6 cm</strong> a výškou <strong>v = 4 cm</strong>:',
-      formula: 'S = 6 × 4 / 2 = 12 cm²',
+      formula: 'S = 6 · 4 : 2 = 12 cm²',
       triA: 6, triB: 4, triAnim: 'fill-grid',
     },
 
@@ -709,7 +709,7 @@ const triObsahTutorial: TutorialDef = {
     {
       title: 'Stále polovina obdélníku!',
       explanation:
-        'I rovnoramenný trojúhelník je přesně <strong>polovina obdélníku</strong> a × v. Podívej se — dvě menší doplňkové části po stranách dohromady tvoří druhou polovinu.',
+        'I rovnoramenný trojúhelník je přesně <strong>polovina obdélníku</strong> a · v. Podívej se — dvě menší doplňkové části po stranách dohromady tvoří druhou polovinu.',
       triA: 8, triB: 5, triApex: 0.5, triAnim: 'fill-grid',
     },
 
@@ -717,7 +717,7 @@ const triObsahTutorial: TutorialDef = {
     {
       title: 'I obecný trojúhelník!',
       explanation:
-        'Vzorec <strong>S = a × v / 2</strong> platí úplně vždy. I pro obecný trojúhelník, kde žádný úhel není pravý a strany mají různou délku. Výška v je vždy kolmice z vrcholu na základnu.',
+        'Vzorec <strong>S = a · v : 2</strong> platí úplně vždy. I pro obecný trojúhelník, kde žádný úhel není pravý a strany mají různou délku. Výška v je vždy kolmice z vrcholu na základnu.',
       triA: 7, triB: 5, triApex: 0.35, triAnim: 'fill-grid',
     },
 
@@ -725,23 +725,23 @@ const triObsahTutorial: TutorialDef = {
     {
       title: 'Zkus to: pravoúhlý',
       explanation: 'Vypočítej obsah <strong>pravoúhlého</strong> trojúhelníku se základnou <strong>a = 8 cm</strong> a výškou <strong>v = 5 cm</strong>.',
-      triA: 8, triB: 5, formula: 'S = a × v / 2',
+      triA: 8, triB: 5, formula: 'S = a · v : 2',
       triAnim: 'none',
-      question: { prompt: 'Jaký je obsah?', correctAnswer: 20, unit: 'cm²', hint: 'S = 8 × 5 / 2 = ?' },
+      question: { prompt: 'Jaký je obsah?', correctAnswer: 20, unit: 'cm²', hint: 'S = 8 · 5 : 2 = ?' },
     },
     {
       title: 'Zkus to: rovnoramenný',
       explanation: 'Vypočítej obsah <strong>rovnoramenného</strong> trojúhelníku se základnou <strong>a = 10 cm</strong> a výškou <strong>v = 6 cm</strong>.',
-      triA: 10, triB: 6, triApex: 0.5, formula: 'S = a × v / 2',
+      triA: 10, triB: 6, triApex: 0.5, formula: 'S = a · v : 2',
       triAnim: 'none',
-      question: { prompt: 'Jaký je obsah?', correctAnswer: 30, unit: 'cm²', hint: 'S = 10 × 6 / 2 = ?' },
+      question: { prompt: 'Jaký je obsah?', correctAnswer: 30, unit: 'cm²', hint: 'S = 10 · 6 : 2 = ?' },
     },
     {
       title: 'Zkus to: obecný trojúhelník',
       explanation: 'Vypočítej obsah <strong>obecného</strong> trojúhelníku se základnou <strong>a = 9 cm</strong> a výškou <strong>v = 4 cm</strong>.',
-      triA: 9, triB: 4, triApex: 0.35, formula: 'S = a × v / 2',
+      triA: 9, triB: 4, triApex: 0.35, formula: 'S = a · v : 2',
       triAnim: 'none',
-      question: { prompt: 'Jaký je obsah?', correctAnswer: 18, unit: 'cm²', hint: 'S = 9 × 4 / 2 = ?' },
+      question: { prompt: 'Jaký je obsah?', correctAnswer: 18, unit: 'cm²', hint: 'S = 9 · 4 : 2 = ?' },
     },
   ],
 };
@@ -838,8 +838,8 @@ const circleObsahTutorial: TutorialDef = {
     {
       title: 'Vzorec pro obsah kruhu',
       explanation:
-        'Obsah „obdélníku" = základna × výška = <strong>πr × r = πr²</strong>. To je obsah kruhu!',
-      formula: 'S = πr × r = π · r²',
+        'Obsah „obdélníku" = základna · výška = <strong>πr · r = πr²</strong>. To je obsah kruhu!',
+      formula: 'S = πr · r = π · r²',
       circleR: 5, circleSectors: 40, circleAnim: 'sector-rearrange',
     },
     {
@@ -891,13 +891,13 @@ const pyramidObjemTutorial: TutorialDef = {
     {
       title: 'Jehlan vs. kvádr',
       explanation:
-        'Objem jehlanu je přesně <strong>⅓ objemu kvádru</strong> se stejnou podstavou a výškou. Do kvádru o rozměrech a × a × v bychom vešli přesně 3 stejné jehlany.',
+        'Objem jehlanu je přesně <strong>⅓ objemu kvádru</strong> se stejnou podstavou a výškou. Do kvádru o rozměrech a · a · v bychom vešli přesně 3 stejné jehlany.',
       pyramidA: 4, pyramidH: 6, pyramidAnim: 'fill-volume',
     },
     {
       title: 'Vzorec pro objem',
       explanation:
-        'Objem jehlanu = třetina obsahu podstavy × výška:',
+        'Objem jehlanu = třetina obsahu podstavy · výška:',
       formula: 'V = ⅓ · S_p · v = ⅓ · a² · v',
       pyramidA: 4, pyramidH: 6, pyramidAnim: 'show-pyramid',
     },
@@ -1016,7 +1016,7 @@ const cylinderObjemTutorial: TutorialDef = {
       cylinderR: 4, cylinderH: 7, cylinderAnim: 'highlight-base',
     },
     {
-      title: 'Objem = podstava × výška',
+      title: 'Objem = podstava · výška',
       explanation:
         'Objem válce spočítáme stejně jako u kvádru — obsah podstavy krát výška. Jen místo obdélníku máme kruh:',
       formula: 'V = S_p · v = π · r² · v',
@@ -1074,7 +1074,7 @@ const cylinderPovrchuTutorial: TutorialDef = {
     {
       title: 'Plocha pláště',
       explanation:
-        'Plocha pláště = obvod podstavy × výška:',
+        'Plocha pláště = obvod podstavy · výška:',
       formula: 'S_pl = 2 · π · r · v',
       cylinderR: 4, cylinderH: 7, cylinderAnim: 'highlight-mantle',
     },
@@ -1139,7 +1139,7 @@ const prismObjemTutorial: TutorialDef = {
     {
       title: 'Vzorec pro objem',
       explanation:
-        'Objem hranolu = obsah podstavy × výška — stejný princip jako u kvádru:',
+        'Objem hranolu = obsah podstavy · výška — stejný princip jako u kvádru:',
       formula: 'V = S_p · v',
       prismSides: 3, prismA: 5, prismH: 8, prismAnim: 'show-prism',
     },
@@ -1195,13 +1195,13 @@ const prismPovrchuTutorial: TutorialDef = {
     {
       title: 'Boční stěny',
       explanation:
-        'Trojboký hranol má <strong>3 obdélníkové boční stěny</strong>, každá o rozměrech <strong>a × v</strong>. Dohromady <strong>S_pl = n · a · v</strong> (n = počet stran, plášť).',
+        'Trojboký hranol má <strong>3 obdélníkové boční stěny</strong>, každá o rozměrech <strong>a · v</strong>. Dohromady <strong>S_pl = n · a · v</strong> (n = počet stran, plášť).',
       prismSides: 3, prismA: 5, prismH: 8, prismAnim: 'highlight-sides',
     },
     {
       title: 'Vzorec pro plášť',
       explanation:
-        'Plášť = obvod podstavy × výška. Pro pravidelný n-úhelník: obvod = n · a.',
+        'Plášť = obvod podstavy · výška. Pro pravidelný n-úhelník: obvod = n · a.',
       formula: 'S_pl = o · v = n · a · v',
       prismSides: 3, prismA: 5, prismH: 8, prismAnim: 'highlight-sides',
     },
@@ -1266,7 +1266,7 @@ const coneObjemTutorial: TutorialDef = {
     {
       title: 'Vzorec pro objem',
       explanation:
-        'Objem kužele = třetina obsahu podstavy × výška:',
+        'Objem kužele = třetina obsahu podstavy · výška:',
       formula: 'V = ⅓ · π · r² · v',
       coneR: 4, coneH: 8, coneAnim: 'show-cone',
     },
@@ -1438,7 +1438,7 @@ const spherePovrchuTutorial: TutorialDef = {
     {
       title: 'Povrch = 4 kruhy',
       explanation:
-        'Zajímavost: povrch koule má <strong>přesně 4× obsah hlavního kruhu</strong> (řezu středem). Představte si 4 kruhy o ploše π·r², které dohromady pokryjí celou kouli.',
+        'Zajímavost: povrch koule má <strong>přesně 4· obsah hlavního kruhu</strong> (řezu středem). Představte si 4 kruhy o ploše π·r², které dohromady pokryjí celou kouli.',
       sphereR: 5, sphereAnim: 'show-surface',
     },
     {
@@ -2683,7 +2683,7 @@ function CubeVis({ edge, anim = 'none', stepKey }: { edge: number; anim?: CubeAn
   /*
    * Isometric cube derived from user's SVG layer template.
    *
-   * SVG analysis (755×589, 3×3 single layer):
+   * SVG analysis (755·589, 3·3 single layer):
    *   Per-unit offsets:  +x = (+125, +73)   +z = (−125, +73)   +y = (0, −145)
    *   Face vertices (from SVG path order):
    *     Left:  A → H → D → C   (fill: darkest)
@@ -2702,7 +2702,7 @@ function CubeVis({ edge, anim = 'none', stepKey }: { edge: number; anim?: CubeAn
   const uxz = S * 73 / 125;           // vertical offset per +x or +z unit (~26.9)
   const uy  = S * 145 / 125;          // vertical offset per +y unit (~53.4)
 
-  // Dynamic viewBox sized to fit the edge×edge×edge cube + label space
+  // Dynamic viewBox sized to fit the edge·edge·edge cube + label space
   const PAD = 55;
   const cubeW = 2 * edge * ux;
   const cubeH = edge * uy + 2 * edge * uxz;
@@ -2853,11 +2853,11 @@ function CubeVis({ edge, anim = 'none', stepKey }: { edge: number; anim?: CubeAn
   function renderFaces() {
     const areaVal = edge * edge;
     const faceDefs = [
-      // Left face (z-axis × y-axis)
+      // Left face (z-axis · y-axis)
       { pts: [B.A, B.H, B.D, B.C], idx: 2, label: `a² = ${areaVal}` },
-      // Right face (x-axis × y-axis)
+      // Right face (x-axis · y-axis)
       { pts: [B.A, B.F, B.B, B.C], idx: 1, label: `a² = ${areaVal}` },
-      // Top face (x-axis × z-axis)
+      // Top face (x-axis · z-axis)
       { pts: [B.E, B.H, B.G, B.F], idx: 0, label: `a² = ${areaVal}` },
     ];
 
@@ -2892,7 +2892,7 @@ function CubeVis({ edge, anim = 'none', stepKey }: { edge: number; anim?: CubeAn
             <rect x={VW / 2 - 55} y={VH - 30} width={110} height={26} rx={13} fill="#312e81" opacity={0.9} />
             <text x={VW / 2} y={VH - 15} textAnchor="middle" dominantBaseline="middle"
               fontSize="13" fontWeight={600} fill="#fff">
-              × 2 = 6 stěn
+              · 2 = 6 stěn
             </text>
           </g>
         )}
@@ -3040,9 +3040,9 @@ function CuboidVis({ edgeA, edgeB, edgeC, anim = 'none', stepKey }: {
     if (anim !== 'highlight-faces') return;
     setActiveFace(-1);
     const t = [
-      setTimeout(() => setActiveFace(0), 500),    // top face  a×b
-      setTimeout(() => setActiveFace(1), 1600),    // right face a×c
-      setTimeout(() => setActiveFace(2), 2700),    // left face  b×c
+      setTimeout(() => setActiveFace(0), 500),    // top face  a·b
+      setTimeout(() => setActiveFace(1), 1600),    // right face a·c
+      setTimeout(() => setActiveFace(2), 2700),    // left face  b·c
       setTimeout(() => setActiveFace(3), 3800),    // all faces
     ];
     return () => t.forEach(clearTimeout);
@@ -3144,7 +3144,7 @@ function CuboidVis({ edgeA, edgeB, edgeC, anim = 'none', stepKey }: {
             <rect x={VW / 2 - 75} y={VH - 30} width={150} height={26} rx={13} fill="#312e81" opacity={0.9} />
             <text x={VW / 2} y={VH - 15} textAnchor="middle" dominantBaseline="middle"
               fontSize="13" fontWeight={600} fill="#fff">
-              Každý pár × 2
+              Každý pár · 2
             </text>
           </g>
         )}
@@ -3195,7 +3195,7 @@ function CuboidVis({ edgeA, edgeB, edgeC, anim = 'none', stepKey }: {
         <g>
           <rect x={defLblX - 50} y={defLblY - 14} width={100} height={28} rx={14} fill="#4d49f3" opacity={0.92} />
           <text x={defLblX} y={defLblY + 1} textAnchor="middle" dominantBaseline="middle" fontSize="15" fontWeight={700} fill="#fff">
-            {edgeA}×{edgeB}×{edgeC} cm
+            {edgeA}·{edgeB}·{edgeC} cm
           </text>
         </g>
       )}
@@ -3361,13 +3361,13 @@ function SphereVis({ radius, anim = 'none', stepKey }: {
           <g>
             <rect x={cx - 60} y={cy + rPx + 10} width={120} height={24} rx={12} fill="#10b981" opacity={0.92} />
             <text x={cx} y={cy + rPx + 23} textAnchor="middle" dominantBaseline="middle"
-              fontSize="13" fontWeight={700} fill="#fff">4 × π·r² = {(4 * Math.PI * r * r).toFixed(1)}</text>
+              fontSize="13" fontWeight={700} fill="#fff">4 · π·r² = {(4 * Math.PI * r * r).toFixed(1)}</text>
           </g>
         )}
         {phase >= 2 && (
           <g>
             <text x={cx} y={cy + 2} textAnchor="middle" dominantBaseline="middle"
-              fontSize="24" fontWeight={800} fill="#fff" opacity={0.7}>4×</text>
+              fontSize="24" fontWeight={800} fill="#fff" opacity={0.7}>4·</text>
           </g>
         )}
       </g>
@@ -3842,7 +3842,7 @@ function PrismVis({ sides, edgeA, prismHeight, anim = 'none', stepKey }: {
           <g>
             <rect x={VW / 2 - 55} y={VH - 34} width={110} height={24} rx={12} fill={sideHighlight} opacity={0.92} />
             <text x={VW / 2} y={VH - 20} textAnchor="middle" dominantBaseline="middle"
-              fontSize="12" fontWeight={700} fill="#fff">{n}× (a·v) = {n * a * h}</text>
+              fontSize="12" fontWeight={700} fill="#fff">{n}· (a·v) = {n * a * h}</text>
           </g>
         )}
 

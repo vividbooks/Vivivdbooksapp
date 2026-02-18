@@ -140,10 +140,7 @@ const ConstructionCard = memo(({
         <p className="text-[#4e5871] opacity-70 text-[13px] leading-[20px] mb-4 flex-1" style={{ fontWeight: 400 }}>
           {description}
         </p>
-        <div className="flex items-center justify-between">
-          <span className="inline-block px-2.5 py-1 rounded-full bg-[#f0f0ff] text-[#4d49f3] text-[12px]" style={{ fontWeight: 400 }}>
-            {grade}
-          </span>
+        <div className="flex items-center justify-end">
           <ArrowRight className="size-4 text-[#4d49f3] opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
         </div>
       </div>

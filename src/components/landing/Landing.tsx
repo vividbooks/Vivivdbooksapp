@@ -290,23 +290,7 @@ function TutorialCard({ item }: { item: TutorialItem }) {
         <p style={{ color: '#4e5871', opacity: 0.7, fontSize: '13px', lineHeight: '20px', fontWeight: 400, marginBottom: '16px', flex: 1 }}>
           {item.description}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              borderRadius: '9999px',
-              background: '#f0f0ff',
-              color: '#4d49f3',
-              fontSize: '12px',
-              fontWeight: 400,
-            }}
-          >
-            <BookOpen size={12} />
-            {item.grade}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
           <ArrowRight size={16} style={{ color: '#4d49f3', opacity: 0.5 }} />
         </div>
       </div>
@@ -456,22 +440,7 @@ function ConstructionCard({ item }: { item: ConstructionItem }) {
         <p style={{ color: '#4e5871', opacity: 0.7, fontSize: '13px', lineHeight: '20px', fontWeight: 400, marginBottom: '16px', flex: 1 }}>
           {item.description}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {item.grade ? (
-            <span
-              style={{
-                display: 'inline-block',
-                padding: '4px 10px',
-                borderRadius: '9999px',
-                background: '#f0f0ff',
-                color: '#4d49f3',
-                fontSize: '12px',
-                fontWeight: 400,
-              }}
-            >
-              {item.grade}
-            </span>
-          ) : <span />}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
           <ArrowRight size={16} style={{ color: '#4d49f3', opacity: 0.5 }} />
         </div>
       </div>
