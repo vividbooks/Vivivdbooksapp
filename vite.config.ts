@@ -5,7 +5,7 @@
 
   export default defineConfig({
     // Use relative base so built HTML works when opened from build/ or deployed to any path (e.g. GitHub Pages)
-    base: '/geometry-app/',
+    base: '/',
     plugins: [react()],
     css: {
       transformer: 'lightningcss',
