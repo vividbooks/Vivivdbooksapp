@@ -23,4 +23,18 @@
   - `VITE_ENABLE_AUTH_GATE=true` (set `false` to disable)
   - `VITE_AUTH_CHECK_URL=https://api.vividbooks.com/v1/login`
   - `VITE_AUTH_REDIRECT_URL=https://app.vividbooks.com`
+
+  ## Project URLs
+
+  | Purpose | URL |
+  |---------|-----|
+  | **Production app** | https://rysovani.vividbooks.com/rysovani-app/ |
+  | **Auth API** | https://api.vividbooks.com/v1/login |
+  | **Auth redirect** | https://app.vividbooks.com |
+  | **Supabase** | https://jjpiguuubvmiobmixwgh.supabase.co |
+  | **Supabase storage** | https://jjpiguuubvmiobmixwgh.supabase.co/storage/v1/object/public/Admin%20math/ |
+  | **KaTeX CDN** | https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css |
+  | **Figma design** | https://www.figma.com/design/7m1mr114B2VJ8FYYGmYfkh/ |
+
+  For CORS / allowed origins, add `https://rysovani.vividbooks.com` to Supabase and API allowlists.
   

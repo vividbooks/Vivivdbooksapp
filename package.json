@@ -1,5 +1,5 @@
 {
-      "homepage": "https://rysovani.vividbooks.com/",
+      "homepage": "https://rysovani.vividbooks.com/rysovani-app/",
       "name": "Matematická výuková aplikace s 3D objekty",
       "version": "0.1.0",
       "private": true,
@@ -60,7 +60,7 @@
       },
       "scripts": {
             "dev": "vite",
-            "build": "vite build && node -e \"require('fs').copyFileSync('docs/index.html','docs/404.html')\"",
+            "build": "node -e \"try{require('fs').rmSync('docs/assets',{recursive:true})}catch(e){}\" && vite build && node -e \"const fs=require('fs'); fs.copyFileSync('docs/rysovani-app/index.html','docs/rysovani-app/404.html'); fs.copyFileSync('docs/rysovani-app/index.html','docs/404.html')\"",
             "predeploy": "npm run build",
             "deploy": "gh-pages -d docs"
       }

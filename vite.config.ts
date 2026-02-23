@@ -4,8 +4,8 @@
   import path from 'path';
 
   export default defineConfig({
-    // Root base for rysovani.vividbooks.com (subdomain = served from /)
-    base: '/',
+    // Subpath for rysovani.vividbooks.com/rysovani-app (GitHub Pages)
+    base: '/rysovani-app/',
     plugins: [react()],
     css: {
       transformer: 'lightningcss',
@@ -72,7 +72,7 @@
     },
     build: {
       target: ['es2020', 'safari14'],
-      outDir: 'docs', // GitHub Pages: set "Source" to "Deploy from a branch" → branch: main, folder: /docs
+      outDir: 'docs/rysovani-app', // Served at rysovani.vividbooks.com/rysovani-app/
       cssMinify: 'lightningcss',
     },
     server: {

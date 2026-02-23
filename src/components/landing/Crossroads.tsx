@@ -79,8 +79,8 @@ export function Crossroads() {
         {/* Card 1: Rýsování a konstrukce */}
         <div
           style={cardStyle}
-          onClick={() => navigate('/rysovani-app')}
-          onTouchEnd={(e) => { e.preventDefault(); navigate('/rysovani-app'); }}
+          onClick={() => navigate('/menu-rysovani')}
+          onTouchEnd={(e) => { e.preventDefault(); navigate('/menu-rysovani'); }}
           role="button"
           tabIndex={0}
           onMouseEnter={(e) => {
@@ -167,8 +167,8 @@ export function Crossroads() {
         {/* Card 2: Tělesa, rovinné útvary a cvičení */}
         <div
           style={cardStyle}
-          onClick={() => navigate('/telesa-app')}
-          onTouchEnd={(e) => { e.preventDefault(); navigate('/telesa-app'); }}
+          onClick={() => navigate('/menu-telesa')}
+          onTouchEnd={(e) => { e.preventDefault(); navigate('/menu-telesa'); }}
           role="button"
           tabIndex={0}
           onMouseEnter={(e) => {

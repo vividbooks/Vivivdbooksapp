@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, useParams } from 'react-router-dom';
 import { Crossroads } from './components/landing/Crossroads';
 import { Landing } from './components/landing/Landing';
 import { CviceniPage } from './components/landing/CviceniPage';
@@ -20,13 +20,17 @@ function SmartObjectPage() {
 }
 
 export default function App() {
+  const routerBase = import.meta.env.BASE_URL.replace(/\/$/, '');
+
   return (
     <AuthGate>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <BrowserRouter basename={routerBase}>
         <Routes>
           <Route path="/" element={<Crossroads />} />
-          <Route path="/rysovani-app" element={<Landing mode="rysovani-app" />} />
-          <Route path="/telesa-app" element={<Landing mode="telesa-app" />} />
+          <Route path="/menu-rysovani" element={<Landing mode="rysovani-app" />} />
+          <Route path="/menu-telesa" element={<Landing mode="telesa-app" />} />
+          <Route path="/rysovani-app" element={<Navigate to="/menu-rysovani" replace />} />
+          <Route path="/telesa-app" element={<Navigate to="/menu-telesa" replace />} />
           <Route path="/rysovani" element={<RysovaniPage />} />
           <Route path="/tutorial/:tutorialId" element={<TutorialPage />} />
           <Route path="/cviceni" element={<CviceniPage />} />
