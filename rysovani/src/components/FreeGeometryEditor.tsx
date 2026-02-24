@@ -1161,6 +1161,47 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     return dInt < dPoint ? intSnap : { x: pointSnap.x, y: pointSnap.y };
   };
 
+  // Helper: najde nejbližší bod NA tvaru (čára, úsečka, polopřímka, kružnice) v okolí bodu
+  const snapToNearestShape = (wx: number, wy: number, threshold = SNAP_PX, excludePointIds?: Set<string>): {x: number, y: number} | null => {
+    const thresh = threshold / scale;
+    let bestDist = thresh;
+    let bestPt: {x: number, y: number} | null = null;
+
+    for (const s of shapes) {
+      const p1 = points.find(p => p.id === s.definition.p1Id);
+      if (!p1) continue;
+      if (excludePointIds?.has(s.definition.p1Id)) continue;
+
+      if (s.type === 'circle') {
+        const p2 = s.definition.p2Id ? points.find(p => p.id === s.definition.p2Id) : null;
+        if (!p2) continue;
+        const r = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+        if (r < 0.0001) continue;
+        const dx = wx - p1.x, dy = wy - p1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 0.0001) continue;
+        const candidate = { x: p1.x + (dx / dist) * r, y: p1.y + (dy / dist) * r };
+        const d = Math.abs(dist - r);
+        if (d < bestDist) { bestDist = d; bestPt = candidate; }
+      } else {
+        // line, segment, ray — projekce na přímku
+        const p2 = s.definition.p2Id ? points.find(p => p.id === s.definition.p2Id) : null;
+        if (!p2) continue;
+        if (excludePointIds?.has(s.definition.p2Id!)) continue;
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq < 0.0001) continue;
+        let t = ((wx - p1.x) * dx + (wy - p1.y) * dy) / lenSq;
+        if (s.type === 'segment') t = Math.max(0, Math.min(1, t));
+        else if (s.type === 'ray') t = Math.max(0, t);
+        const candidate = { x: p1.x + t * dx, y: p1.y + t * dy };
+        const d = Math.sqrt((wx - candidate.x) ** 2 + (wy - candidate.y) ** 2);
+        if (d < bestDist) { bestDist = d; bestPt = candidate; }
+      }
+    }
+    return bestPt;
+  };
+
   // Helper: najde nejbližší průsečík dvou čar/kružnic v okolí bodu
   const findNearestIntersection = (wx: number, wy: number, threshold = SNAP_PX): {x: number, y: number} | null => {
     const lineShapes = shapes.filter(s => ['line', 'segment', 'ray'].includes(s.type));
@@ -2217,11 +2258,22 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       return;
     }
 
-    // Drag logic (single point) — snap to intersections and other points while dragging
+    // Drag logic (single point) — snap to shapes (lines/circles) and intersections, NOT to other labeled points
     if (activeTool === 'move' && draggedPointId) {
-      const dragSnap = getSnapPosition(wx, wy, SNAP_PX, draggedPointId);
-      const nx = dragSnap ? dragSnap.x : wx;
-      const ny = dragSnap ? dragSnap.y : wy;
+      const excludeIds = new Set([draggedPointId]);
+      const shapeSnap = snapToNearestShape(wx, wy, SNAP_PX, excludeIds);
+      const intSnap = findNearestIntersection(wx, wy, SNAP_PX);
+      let nx = wx, ny = wy;
+      if (shapeSnap && intSnap) {
+        const dShape = Math.sqrt((shapeSnap.x - wx) ** 2 + (shapeSnap.y - wy) ** 2);
+        const dInt   = Math.sqrt((intSnap.x   - wx) ** 2 + (intSnap.y   - wy) ** 2);
+        const best = dInt < dShape ? intSnap : shapeSnap;
+        nx = best.x; ny = best.y;
+      } else if (shapeSnap) {
+        nx = shapeSnap.x; ny = shapeSnap.y;
+      } else if (intSnap) {
+        nx = intSnap.x; ny = intSnap.y;
+      }
       setPoints(prev => prev.map(p =>
         p.id === draggedPointId
           ? { ...p, x: nx, y: ny }
