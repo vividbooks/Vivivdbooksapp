@@ -1,17 +1,17 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calculator } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import { ExerciseTile } from './ExerciseTile';
 import { objects } from '../../data/objects';
 import type { TaskType } from '../viewer/ObjectQuizPanel';
 
-const TASK_TYPES: TaskType[] = ['objem', 'povrch'];
+const TASK_TYPES_3D: TaskType[] = ['objem', 'povrch'];
+const TASK_TYPES_2D: TaskType[] = ['obvod', 'obsah'];
 
 export function CviceniPage() {
-  const navigate = useNavigate();
-  const exercises = objects.flatMap((obj) =>
-    TASK_TYPES.map((taskType) => ({ object: obj, taskType }))
-  );
+  const exercises = objects.flatMap((obj) => {
+    const taskTypes = obj.is2D ? TASK_TYPES_2D : TASK_TYPES_3D;
+    return taskTypes.map((taskType) => ({ object: obj, taskType }));
+  });
 
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', paddingBottom: 80 }}>

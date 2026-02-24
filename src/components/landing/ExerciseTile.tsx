@@ -21,6 +21,7 @@ function getGenitive(name: string): string {
     Kruh: 'kruhu',
     Lichoběžník: 'lichoběžníku',
     Kosočtverec: 'kosočtverce',
+    Kosodélník: 'kosodélníku',
   };
   return m[name] ?? name.toLowerCase();
 }

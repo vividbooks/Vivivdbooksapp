@@ -1157,16 +1157,27 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     return dInt < dPoint ? intSnap : { x: pointSnap.x, y: pointSnap.y };
   };
 
-  // Helper: najde nejbližší bod NA tvaru (čára, úsečka, polopřímka, kružnice) v okolí bodu
+  // Helper: najde nejbližší bod NA tvaru (čára, úsečka, polopřímka, kružnice) v okolí bodu.
+  // Vrací pouze body na VNITŘKU tvaru — nikdy ne na pozici existujícího bodu.
   const snapToNearestShape = (wx: number, wy: number, threshold = SNAP_PX, excludePointIds?: Set<string>): {x: number, y: number} | null => {
     const thresh = threshold / scale;
+    // Minimum distance a candidate must be from any existing labeled point (to avoid "snapping to a point")
+    const minFromPoint = 10 / scale;
     let bestDist = thresh;
     let bestPt: {x: number, y: number} | null = null;
+
+    const isTooCloseToAnyPoint = (cx: number, cy: number): boolean => {
+      for (const p of points) {
+        if (excludePointIds?.has(p.id)) continue;
+        const d = Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2);
+        if (d < minFromPoint) return true;
+      }
+      return false;
+    };
 
     for (const s of shapes) {
       const p1 = points.find(p => p.id === s.definition.p1Id);
       if (!p1) continue;
-      if (excludePointIds?.has(s.definition.p1Id)) continue;
 
       if (s.type === 'circle') {
         const p2 = s.definition.p2Id ? points.find(p => p.id === s.definition.p2Id) : null;
@@ -1178,21 +1189,26 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         if (dist < 0.0001) continue;
         const candidate = { x: p1.x + (dx / dist) * r, y: p1.y + (dy / dist) * r };
         const d = Math.abs(dist - r);
-        if (d < bestDist) { bestDist = d; bestPt = candidate; }
+        if (d < bestDist && !isTooCloseToAnyPoint(candidate.x, candidate.y)) {
+          bestDist = d; bestPt = candidate;
+        }
       } else {
-        // line, segment, ray — projekce na přímku
+        // line, segment, ray — projekce na přímku (pouze vnitřek, ne krajní body)
         const p2 = s.definition.p2Id ? points.find(p => p.id === s.definition.p2Id) : null;
         if (!p2) continue;
-        if (excludePointIds?.has(s.definition.p2Id!)) continue;
         const dx = p2.x - p1.x, dy = p2.y - p1.y;
         const lenSq = dx * dx + dy * dy;
         if (lenSq < 0.0001) continue;
         let t = ((wx - p1.x) * dx + (wy - p1.y) * dy) / lenSq;
-        if (s.type === 'segment') t = Math.max(0, Math.min(1, t));
-        else if (s.type === 'ray') t = Math.max(0, t);
+        // Clamp but leave a margin from endpoints to avoid snapping to labeled points
+        const margin = 0.02;
+        if (s.type === 'segment') t = Math.max(margin, Math.min(1 - margin, t));
+        else if (s.type === 'ray') t = Math.max(margin, t);
         const candidate = { x: p1.x + t * dx, y: p1.y + t * dy };
         const d = Math.sqrt((wx - candidate.x) ** 2 + (wy - candidate.y) ** 2);
-        if (d < bestDist) { bestDist = d; bestPt = candidate; }
+        if (d < bestDist && !isTooCloseToAnyPoint(candidate.x, candidate.y)) {
+          bestDist = d; bestPt = candidate;
+        }
       }
     }
     return bestPt;
@@ -2261,6 +2277,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       } else if (intSnap) {
         snapPrev = intSnap;
       }
+      console.log(`[DRAG] dragging ${draggedPointId} cursor=(${wx.toFixed(1)},${wy.toFixed(1)}) shapeSnap=${shapeSnap ? `(${shapeSnap.x.toFixed(1)},${shapeSnap.y.toFixed(1)})` : 'null'} intSnap=${intSnap ? `(${intSnap.x.toFixed(1)},${intSnap.y.toFixed(1)})` : 'null'} preview=${snapPrev ? 'YES' : 'null'}`);
       dragSnapPreviewRef.current = snapPrev;
       // Point follows cursor (snaps to preview on mouseup)
       setPoints(prev => prev.map(p =>

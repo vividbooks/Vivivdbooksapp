@@ -81,9 +81,17 @@ export function ObjectQuizPanel({
     }
   };
 
-  const taskLabel = taskType === 'objem' ? 'Objem' : 'Povrch';
-  const taskSentence =
-    taskType === 'objem' ? 'Vypočítejte objem tělesa.' : 'Vypočítejte povrch tělesa.';
+  const TASK_LABEL_MAP: Record<string, string> = {
+    objem: 'Objem', povrch: 'Povrch', obvod: 'Obvod', obsah: 'Obsah',
+  };
+  const TASK_SENTENCE_MAP: Record<string, string> = {
+    objem: 'Vypočítejte objem tělesa.',
+    povrch: 'Vypočítejte povrch tělesa.',
+    obvod: 'Vypočítejte obvod útvaru.',
+    obsah: 'Vypočítejte obsah útvaru.',
+  };
+  const taskLabel = TASK_LABEL_MAP[taskType] ?? taskType;
+  const taskSentence = TASK_SENTENCE_MAP[taskType] ?? `Vypočítejte ${taskType} tělesa.`;
 
   const paramColorSets: { bg: string; text: string; label: string }[] = [
     { bg: '#e7f5ff', text: '#1971c2', label: '#1864ab' },
