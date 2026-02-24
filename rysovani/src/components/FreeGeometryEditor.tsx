@@ -270,6 +270,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   const nearestLineSnapRef = useRef<{x: number, y: number} | null>(null); // Line snap indicator for visual feedback (point tool)
   const dragSnapPreviewRef = useRef<{x: number, y: number} | null>(null); // Snap preview during point drag
   const draggedPointIdRef = useRef<string | null>(null); // Mirrors draggedPointId state — no closure staleness
+  const draggedPointPosRef = useRef<{x: number, y: number} | null>(null); // Real-time drag position (ref to avoid setPoints on every mousemove)
+  const dragUpdateRafRef = useRef<number | null>(null); // RAF handle for throttled setPoints during drag
   const pendingCircleCenterRef = useRef<string | null>(null); // ID of point created as circle center (removed if circle not completed)
   const mouseMoveThrottleRef = useRef(false); // Throttle flag for conditional throttling
   const lastTouchTimeRef = useRef<number>(0); // Timestamp posledniho touch eventu pro prevenci double-tap
@@ -2299,13 +2301,22 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       // Only snap to shapes (lines/circles), never to labeled points or intersections
       const excludeIds = new Set([currentDragId]);
       dragSnapPreviewRef.current = snapToNearestShape(wx, wy, SNAP_PX, excludeIds);
-      setPoints(prev => prev.map(p =>
-        p.id === currentDragId
-          ? { ...p, x: wx, y: wy }
-          : p
-      ));
+      // Store position in ref for real-time rendering
+      draggedPointPosRef.current = { x: wx, y: wy };
+      // Throttle setPoints to one per animation frame to avoid dropped frames
+      if (!dragUpdateRafRef.current) {
+        dragUpdateRafRef.current = requestAnimationFrame(() => {
+          dragUpdateRafRef.current = null;
+          const pos = draggedPointPosRef.current;
+          const id = draggedPointIdRef.current;
+          if (pos && id) {
+            setPoints(prev => prev.map(p => p.id === id ? { ...p, x: pos.x, y: pos.y } : p));
+          }
+        });
+      }
     } else {
       dragSnapPreviewRef.current = null;
+      draggedPointPosRef.current = null;
     }
 
     // Marquee rectangle selection (move tool drag on empty space)
@@ -2407,15 +2418,21 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       setCircleInput(prev => ({ ...prev, isDraggingHandle: false, isDraggingCenter: false }));
     }
     
-    // On release: snap dragged point to preview position if available
+    // Cancel any pending drag RAF
+    if (dragUpdateRafRef.current) {
+      cancelAnimationFrame(dragUpdateRafRef.current);
+      dragUpdateRafRef.current = null;
+    }
+    // On release: snap to preview position or commit final drag position
     const releasedId = draggedPointIdRef.current;
-    if (releasedId && dragSnapPreviewRef.current) {
-      const snap = dragSnapPreviewRef.current;
+    const finalPos = dragSnapPreviewRef.current ?? draggedPointPosRef.current;
+    if (releasedId && finalPos) {
       setPoints(prev => prev.map(p =>
-        p.id === releasedId ? { ...p, x: snap.x, y: snap.y } : p
+        p.id === releasedId ? { ...p, x: finalPos.x, y: finalPos.y } : p
       ));
     }
     dragSnapPreviewRef.current = null;
+    draggedPointPosRef.current = null;
     draggedPointIdRef.current = null;
     setDraggedPointId(null);
     if (activeTool === 'pan') {
@@ -2766,6 +2783,15 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             // Zápis konstrukce
             const p1data = animState.p1 as any;
             const p2data = animState.p2 as any;
+            // For circles: reposition radius point to 45° (down-right) from center
+            if (newShape.type === 'circle') {
+              const r = Math.sqrt((p2data.x - p1data.x) ** 2 + (p2data.y - p1data.y) ** 2);
+              setPoints(prev => prev.map(pt =>
+                pt.id === p2data.id
+                  ? { ...pt, x: p1data.x + Math.cos(Math.PI / 4) * r, y: p1data.y + Math.sin(Math.PI / 4) * r }
+                  : pt
+              ));
+            }
             if (newShape.type === 'segment') {
               const lA = getPointLabel(p1data.id);
               const lB = getPointLabel(p2data.id);
@@ -2842,6 +2868,14 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // During drag, use ref position for the dragged point (avoids stale React state)
+    const getLivePoint = (p: GeoPoint): GeoPoint => {
+      if (draggedPointIdRef.current === p.id && draggedPointPosRef.current) {
+        return { ...p, x: draggedPointPosRef.current.x, y: draggedPointPosRef.current.y };
+      }
+      return p;
+    };
 
     // Reset - optimalizace pro star  za zen  (sn en  DPR)
     const dpr = isLowPerformance ? 1 : (window.devicePixelRatio || 1);
@@ -2954,10 +2988,12 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
     // 1. Vykreslení hotových tvarů
     shapes.forEach(shape => {
-      const p1 = points.find(p => p.id === shape.definition.p1Id);
-      const p2 = points.find(p => p.id === shape.definition.p2Id);
+      const p1raw = points.find(p => p.id === shape.definition.p1Id);
+      const p2raw = points.find(p => p.id === shape.definition.p2Id);
       
-      if (!p1 || !p2) return;
+      if (!p1raw || !p2raw) return;
+      const p1 = getLivePoint(p1raw);
+      const p2 = getLivePoint(p2raw);
 
       if (shape.type === 'segment') {
         drawSegment(ctx, p1, p2, 1, darkMode ? '#e5e7eb' : '#1f2937');
@@ -3283,14 +3319,61 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     }
 
     // 3. Vykreslení bodů (vždy nahoře)
-    points.forEach(p => {
+    points.forEach(pRaw => {
+      const p = getLivePoint(pRaw);
       if (p.hidden) return; // Skip hidden points
       
-      // Skrýt bod na obvodu kružnice POUZE pokud nemá label a není použit jinou konstrukcí
-      const isCircleRadiusPoint = shapes.some(s => s.type === 'circle' && s.definition.p2Id === p.id);
+      // Handle pro změnu poloměru kružnice — vždy vykreslit jako modré kolečko s dvojšipkou
+      const circleShapeForHandle = shapes.find(s => s.type === 'circle' && s.definition.p2Id === p.id);
+      const isCircleRadiusPoint = !!circleShapeForHandle;
       if (isCircleRadiusPoint) {
         const usedByOtherShape = shapes.some(s => s.type !== 'circle' && s.points.includes(p.id));
-        if (!p.label && !usedByOtherShape) return; // Skrýt jen pokud nemá jméno a není jinde použit
+        if (!p.label && !usedByOtherShape) {
+          // Vykreslit jako táhlo (handle) — NE jako bod
+          const center = points.find(pt => pt.id === circleShapeForHandle!.definition.p1Id);
+          if (center) {
+            const radialAngle = Math.atan2(p.y - center.y, p.x - center.x);
+            const isHoveredHandle = p.id === hoveredPointId || p.id === draggedPointId;
+            ctx.save();
+            ctx.setLineDash([]);
+            // Glow ring pouze při hoveru/drag
+            if (isHoveredHandle) {
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+              ctx.fillStyle = darkMode ? 'rgba(122, 162, 247, 0.18)' : 'rgba(59, 130, 246, 0.12)';
+              ctx.fill();
+            }
+            // Bílý (ne modrý) kruh s barevným outline — jasně táhlo, ne bod
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
+            ctx.fillStyle = darkMode ? '#1e2030' : '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = isHoveredHandle
+              ? (darkMode ? '#7aa2f7' : '#2563eb')
+              : (darkMode ? '#565f89' : '#94a3b8');
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Dvojšipka podél poloměru — tmavá barva na světlém pozadí
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(radialAngle);
+            const aLen = 7, hLen = 3.5, hAng = Math.PI / 5;
+            ctx.strokeStyle = isHoveredHandle
+              ? (darkMode ? '#7aa2f7' : '#2563eb')
+              : (darkMode ? '#a9b1d6' : '#475569');
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-aLen, 0); ctx.lineTo(aLen, 0);
+            ctx.moveTo(-aLen + hLen * Math.cos(hAng), -hLen * Math.sin(hAng)); ctx.lineTo(-aLen, 0); ctx.lineTo(-aLen + hLen * Math.cos(hAng), hLen * Math.sin(hAng));
+            ctx.moveTo(aLen - hLen * Math.cos(hAng), -hLen * Math.sin(hAng)); ctx.lineTo(aLen, 0); ctx.lineTo(aLen - hLen * Math.cos(hAng), hLen * Math.sin(hAng));
+            ctx.stroke();
+            ctx.restore();
+            ctx.restore();
+          }
+          return;
+        }
       }
 
       const isHovered = p.id === hoveredPointId;
@@ -5151,64 +5234,42 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       {!recordingState.showPlayer && activeTool === 'circle' && isTabletMode && circleTabletState.active && circleTabletState.center && circleTabletState.centerId && !circleInput.visible && (
         <button
           onClick={() => {
-            // Vytvoříme bod na obvodu kružnice
             const centerPoint = points.find(p => p.id === circleTabletState.centerId);
             if (!centerPoint) return;
-            
-            const radiusPointId = crypto.randomUUID();
             const effectiveRadius = circleTabletState.radius;
-            const handleAngle = circleTabletState.handlePos 
-              ? Math.atan2(circleTabletState.handlePos.y - centerPoint.y, circleTabletState.handlePos.x - centerPoint.x)
-              : 0; // Default doprava
+            // Radius handle always stored at 45° (down-right)
             const radiusPoint: GeoPoint = {
-              id: radiusPointId,
-              x: centerPoint.x + Math.cos(handleAngle) * effectiveRadius,
-              y: centerPoint.y + Math.sin(handleAngle) * effectiveRadius,
+              id: crypto.randomUUID(),
+              x: centerPoint.x + Math.cos(Math.PI / 4) * effectiveRadius,
+              y: centerPoint.y + Math.sin(Math.PI / 4) * effectiveRadius,
               label: '',
               hidden: false
             };
-            
             setPoints(prev => [...prev, radiusPoint]);
-            
-            // Spustíme animaci
-            pendingCircleCenterRef.current = null; // Circle completed
+            pendingCircleCenterRef.current = null;
             startConstructionAnimation('circle', centerPoint, radiusPoint);
-            
-            // Resetujeme tablet state i selectedPointId
             setSelectedPointId(null);
-            setCircleTabletState({
-              active: false,
-              centerId: null,
-              center: null,
-              radius: 150,
-              isDraggingHandle: false,
-              handlePos: null
-            });
+            setCircleTabletState({ active: false, centerId: null, center: null, radius: 150, isDraggingHandle: false, handlePos: null });
           }}
           onTouchEnd={(e) => {
             e.preventDefault();
             e.stopPropagation();
             const centerPoint = points.find(p => p.id === circleTabletState.centerId);
             if (!centerPoint) return;
-            const radiusPointId = crypto.randomUUID();
             const effectiveRadius = circleTabletState.radius;
-            const handleAngle = circleTabletState.handlePos 
-              ? Math.atan2(circleTabletState.handlePos.y - centerPoint.y, circleTabletState.handlePos.x - centerPoint.x)
-              : 0;
+            // Radius handle always stored at 45° (down-right)
             const radiusPoint: GeoPoint = {
-              id: radiusPointId,
-              x: centerPoint.x + Math.cos(handleAngle) * effectiveRadius,
-              y: centerPoint.y + Math.sin(handleAngle) * effectiveRadius,
+              id: crypto.randomUUID(),
+              x: centerPoint.x + Math.cos(Math.PI / 4) * effectiveRadius,
+              y: centerPoint.y + Math.sin(Math.PI / 4) * effectiveRadius,
               label: '',
               hidden: false
             };
             setPoints(prev => [...prev, radiusPoint]);
-            pendingCircleCenterRef.current = null; // Circle completed
+            pendingCircleCenterRef.current = null;
             startConstructionAnimation('circle', centerPoint, radiusPoint);
             setSelectedPointId(null);
-            setCircleTabletState({
-              active: false, centerId: null, center: null, radius: 150, isDraggingHandle: false, handlePos: null
-            });
+            setCircleTabletState({ active: false, centerId: null, center: null, radius: 150, isDraggingHandle: false, handlePos: null });
           }}
           className="absolute left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full text-sm font-bold bg-blue-600 text-white shadow-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
           style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
@@ -5499,25 +5560,31 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             const doCompassDraw = () => {
               if (!circleInput.center) return;
               const r = circleInput.radius * PIXELS_PER_CM;
-              const targetX = circleInput.center.x + Math.cos(circleInput.handleAngle) * r;
-              const targetY = circleInput.center.y + Math.sin(circleInput.handleAngle) * r;
+              // Radius handle always at 45° (down-right)
+              const targetX = circleInput.center.x + Math.cos(Math.PI / 4) * r;
+              const targetY = circleInput.center.y + Math.sin(Math.PI / 4) * r;
+
+              // Reuse existing labeled point if center was snapped onto one
+              const snappedCenter = points.find(p =>
+                p.label && Math.sqrt((p.x - circleInput.center!.x) ** 2 + (p.y - circleInput.center!.y) ** 2) * scale < 10
+              );
 
               if (circleInput.mode === 'point') {
-                const centerId = crypto.randomUUID();
-                const centerLabel = getNextPointLabel();
-                const centerPoint: GeoPoint = { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
+                const centerId = snappedCenter ? snappedCenter.id : crypto.randomUUID();
+                const centerLabel = snappedCenter ? snappedCenter.label : getNextPointLabel();
+                const centerPoint: GeoPoint = snappedCenter ?? { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
                 const pointId = crypto.randomUUID();
                 const pointLabel = getNextPointLabel();
                 const newPoint: GeoPoint = { id: pointId, x: targetX, y: targetY, label: pointLabel, hidden: false };
-                setPoints(prev => [...prev, centerPoint, newPoint]);
+                setPoints(prev => snappedCenter ? [...prev, newPoint] : [...prev, centerPoint, newPoint]);
                 triggerEffect(targetX, targetY, '#3b82f6');
               } else {
-                const centerId = crypto.randomUUID();
-                const centerLabel = getNextPointLabel();
-                const centerPoint: GeoPoint = { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
+                const centerId = snappedCenter ? snappedCenter.id : crypto.randomUUID();
+                const centerLabel = snappedCenter ? snappedCenter.label : getNextPointLabel();
+                const centerPoint: GeoPoint = snappedCenter ?? { id: centerId, x: circleInput.center.x, y: circleInput.center.y, label: centerLabel, hidden: false };
                 const radiusId = crypto.randomUUID();
                 const radiusPoint: GeoPoint = { id: radiusId, x: targetX, y: targetY, label: '', hidden: false };
-                setPoints(prev => [...prev, centerPoint, radiusPoint]);
+                setPoints(prev => snappedCenter ? [...prev, radiusPoint] : [...prev, centerPoint, radiusPoint]);
                 pendingCircleCenterRef.current = null;
                 startConstructionAnimation('circle', centerPoint, radiusPoint);
               }
