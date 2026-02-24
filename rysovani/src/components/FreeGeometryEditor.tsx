@@ -267,7 +267,9 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   const circleTabletRadiusRef = useRef<number>(150); // Real-time radius tracking pro smooth rendering
   const circleTabletHandlePosRef = useRef<{x: number, y: number} | null>(null); // Real-time handle position pro smooth rendering
   const nearestIntersectionRef = useRef<{x: number, y: number} | null>(null); // Intersection snap indicator for visual feedback
+  const nearestLineSnapRef = useRef<{x: number, y: number} | null>(null); // Line snap indicator for visual feedback (point tool)
   const dragSnapPreviewRef = useRef<{x: number, y: number} | null>(null); // Snap preview during point drag
+  const draggedPointIdRef = useRef<string | null>(null); // Mirrors draggedPointId state — no closure staleness
   const pendingCircleCenterRef = useRef<string | null>(null); // ID of point created as circle center (removed if circle not completed)
   const mouseMoveThrottleRef = useRef(false); // Throttle flag for conditional throttling
   const lastTouchTimeRef = useRef<number>(0); // Timestamp posledniho touch eventu pro prevenci double-tap
@@ -1536,6 +1538,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
             pointSnapshots: points.filter(p => allPointIds.has(p.id)).map(p => ({ id: p.id, x: p.x, y: p.y }))
           };
         } else {
+          draggedPointIdRef.current = snapped.id;
           setDraggedPointId(snapped.id);
           setSelection(snapped.id);
           if (!(e.ctrlKey || e.metaKey)) setSelectedShapeIds([]);
@@ -1630,23 +1633,38 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
     // 2. NÁSTROJ: BOD (POINT)
     if (activeTool === 'point') {
-      // Always check intersection — it might be closer than any existing point
+      // Snap priority: intersection > line > free placement. Never snap to existing labeled points.
+      // Intersection always wins if present in range.
       const intersection = findNearestIntersection(wx, wy);
-      const dInt = intersection ? Math.sqrt((intersection.x - wx) ** 2 + (intersection.y - wy) ** 2) : Infinity;
-      const dSnap = snapped ? Math.sqrt((snapped.x - wx) ** 2 + (snapped.y - wy) ** 2) : Infinity;
-      const useIntersection = intersection && dInt < dSnap;
+      const lineSnap = intersection ? null : snapToNearestShape(wx, wy);
 
-      if (!useIntersection && snapped && (snapped.hidden || !snapped.label)) {
-        // Klik na skrytý/neoznačený bod (např. definiční bod přímky) — povýšit na viditelný
-        const assignedLabel = promoteToVisiblePoint(snapped.id);
-        triggerEffect(snapped.x, snapped.y, '#3b82f6');
-        if (assignedLabel) {
-          addConstructionStep('point', assignedLabel, assignedLabel, `Bod ${assignedLabel}`, [snapped.id]);
+      let px = wx;
+      let py = wy;
+      let promotedHidden = false;
+
+      if (intersection) {
+        px = intersection.x;
+        py = intersection.y;
+        const hiddenAtIntersection = points.find(p => (!p.label || p.hidden) && Math.sqrt((p.x - px) ** 2 + (p.y - py) ** 2) * scale < 6);
+        if (hiddenAtIntersection) {
+          const assignedLabel = promoteToVisiblePoint(hiddenAtIntersection.id);
+          triggerEffect(px, py, '#3b82f6');
+          if (assignedLabel) addConstructionStep('point', assignedLabel, assignedLabel, `Bod ${assignedLabel}`, [hiddenAtIntersection.id]);
+          promotedHidden = true;
         }
-      } else if (useIntersection || !snapped) {
-        // Přichytit k průsečíku nebo kliknout na volné místo
-        const px = useIntersection ? intersection!.x : wx;
-        const py = useIntersection ? intersection!.y : wy;
+      } else if (lineSnap) {
+        px = lineSnap.x;
+        py = lineSnap.y;
+        const hiddenAtLine = points.find(p => (!p.label || p.hidden) && Math.sqrt((p.x - px) ** 2 + (p.y - py) ** 2) * scale < 6);
+        if (hiddenAtLine) {
+          const assignedLabel = promoteToVisiblePoint(hiddenAtLine.id);
+          triggerEffect(px, py, '#3b82f6');
+          if (assignedLabel) addConstructionStep('point', assignedLabel, assignedLabel, `Bod ${assignedLabel}`, [hiddenAtLine.id]);
+          promotedHidden = true;
+        }
+      }
+
+      if (!promotedHidden) {
         // Check if a labeled point is already very close to this position
         const alreadyThere = points.some(p => p.label && Math.sqrt((p.x - px) ** 2 + (p.y - py) ** 2) * scale < 6);
         if (!alreadyThere) {
@@ -1661,7 +1679,6 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
           addConstructionStep('point', newPoint.label, newPoint.label, `Bod ${newPoint.label}`, [newPoint.id]);
         }
       }
-      // Pokud snapped je viditelný bod s labelem a není tu bližší průsečík — nic nedělat
       return;
     }
 
@@ -2219,22 +2236,36 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
 
     // Hover logic for points
     const snapped = getSnappingPoint(wx, wy);
-    setHoveredPointId(snapped ? snapped.id : null);
+    // For point tool: don't highlight existing points — snap to lines/intersections instead
+    setHoveredPointId(activeTool === 'point' ? null : (snapped ? snapped.id : null));
     mousePosRef.current = { x: wx, y: wy };
 
-    // Intersection snap indicator — show even when a point is nearby (distance-based priority)
-    if (['point', 'circle', 'segment', 'line', 'angle', 'perpendicular', 'ray', 'bisector'].includes(activeTool)) {
+    // Snap indicators
+    if (activeTool === 'point') {
+      // Point tool: snap to lines and intersections, NOT to existing labeled points.
+      // Intersection always takes priority — if one exists in range, never show line snap.
+      const intSnap = findNearestIntersection(wx, wy);
+      if (intSnap) {
+        nearestIntersectionRef.current = intSnap;
+        nearestLineSnapRef.current = null;
+      } else {
+        nearestIntersectionRef.current = null;
+        nearestLineSnapRef.current = snapToNearestShape(wx, wy);
+      }
+    } else if (['circle', 'segment', 'line', 'angle', 'perpendicular', 'ray', 'bisector'].includes(activeTool)) {
+      // Intersection snap indicator — show even when a point is nearby (distance-based priority)
       const intSnap = findNearestIntersection(wx, wy);
       if (intSnap && snapped) {
-        // Only show intersection indicator if intersection is closer than the snapped point
         const dInt = Math.sqrt((intSnap.x - wx) ** 2 + (intSnap.y - wy) ** 2);
         const dPoint = Math.sqrt((snapped.x - wx) ** 2 + (snapped.y - wy) ** 2);
         nearestIntersectionRef.current = dInt < dPoint ? intSnap : null;
       } else {
         nearestIntersectionRef.current = intSnap;
       }
+      nearestLineSnapRef.current = null;
     } else {
       nearestIntersectionRef.current = null;
+      nearestLineSnapRef.current = null;
     }
 
     // Shape hover pro nástroj Výběr a Guma (detekce tvaru pod kurzorem)
@@ -2261,26 +2292,15 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       return;
     }
 
-    // Drag logic (single point) — point follows cursor, snap preview shown as orange dot
-    if (activeTool === 'move' && draggedPointId) {
-      const excludeIds = new Set([draggedPointId]);
-      const shapeSnap = snapToNearestShape(wx, wy, SNAP_PX, excludeIds);
-      const intSnap = findNearestIntersection(wx, wy, SNAP_PX);
-      let snapPrev: {x: number, y: number} | null = null;
-      if (shapeSnap && intSnap) {
-        const dShape = Math.sqrt((shapeSnap.x - wx) ** 2 + (shapeSnap.y - wy) ** 2);
-        const dInt   = Math.sqrt((intSnap.x   - wx) ** 2 + (intSnap.y   - wy) ** 2);
-        snapPrev = dInt < dShape ? intSnap : shapeSnap;
-      } else if (shapeSnap) {
-        snapPrev = shapeSnap;
-      } else if (intSnap) {
-        snapPrev = intSnap;
-      }
-      console.log(`[DRAG] dragging ${draggedPointId} cursor=(${wx.toFixed(1)},${wy.toFixed(1)}) shapeSnap=${shapeSnap ? `(${shapeSnap.x.toFixed(1)},${shapeSnap.y.toFixed(1)})` : 'null'} intSnap=${intSnap ? `(${intSnap.x.toFixed(1)},${intSnap.y.toFixed(1)})` : 'null'} preview=${snapPrev ? 'YES' : 'null'}`);
-      dragSnapPreviewRef.current = snapPrev;
-      // Point follows cursor (snaps to preview on mouseup)
+    // Drag logic (single point) — point follows cursor, snap preview shown as orange dot on shape
+    // Use ref to avoid stale closure — draggedPointIdRef is always current
+    const currentDragId = draggedPointIdRef.current;
+    if (activeTool === 'move' && currentDragId) {
+      // Only snap to shapes (lines/circles), never to labeled points or intersections
+      const excludeIds = new Set([currentDragId]);
+      dragSnapPreviewRef.current = snapToNearestShape(wx, wy, SNAP_PX, excludeIds);
       setPoints(prev => prev.map(p =>
-        p.id === draggedPointId
+        p.id === currentDragId
           ? { ...p, x: wx, y: wy }
           : p
       ));
@@ -2337,8 +2357,8 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         const dx = wx - circleInput.center.x;
         const dy = wy - circleInput.center.y;
         const newRadiusPx = Math.sqrt(dx * dx + dy * dy);
-        const newRadiusCm = Math.max(0.5, newRadiusPx / PIXELS_PER_CM);
-        const rounded = Math.round(newRadiusCm * 2) / 2; // Zaokrouhlit na 0.5
+        const newRadiusCm = Math.max(0.1, newRadiusPx / PIXELS_PER_CM);
+        const rounded = Math.round(newRadiusCm * 10) / 10; // Zaokrouhlit na 0.1
         setCircleInput(prev => ({
           ...prev,
           radius: rounded,
@@ -2388,13 +2408,15 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
     }
     
     // On release: snap dragged point to preview position if available
-    if (draggedPointId && dragSnapPreviewRef.current) {
+    const releasedId = draggedPointIdRef.current;
+    if (releasedId && dragSnapPreviewRef.current) {
       const snap = dragSnapPreviewRef.current;
       setPoints(prev => prev.map(p =>
-        p.id === draggedPointId ? { ...p, x: snap.x, y: snap.y } : p
+        p.id === releasedId ? { ...p, x: snap.x, y: snap.y } : p
       ));
     }
     dragSnapPreviewRef.current = null;
+    draggedPointIdRef.current = null;
     setDraggedPointId(null);
     if (activeTool === 'pan') {
         isPanning.current = false;
@@ -2506,7 +2528,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
       const cy = (t1.clientY + t2.clientY) / 2;
       pinchRef.current = { active: true, lastDist: dist, lastCenter: { x: cx, y: cy } };
       // Cancel any single-finger action in progress
-      if (draggedPointId) setDraggedPointId(null);
+      if (draggedPointId) { draggedPointIdRef.current = null; setDraggedPointId(null); }
       if (isPanning.current) isPanning.current = false;
       if (groupDragRef.current) groupDragRef.current = null;
       if (marqueeRef.current) marqueeRef.current = null;
@@ -3291,18 +3313,27 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         tickWidth = 3.5;
       }
 
-      // Zjistit, jestli je bod součástí nějaké přímky/úsečky/paprsku
-      const lineShape = shapes.find(s => 
-        (s.type === 'segment' || s.type === 'line' || s.type === 'ray') && 
-        (s.definition.p1Id === p.id || s.definition.p2Id === p.id)
-      );
+      // Zjistit, jestli je bod součástí nebo leží na nějaké přímce/úsečce/paprsku
+      const lineShape = shapes.find(s => {
+        if (!['segment', 'line', 'ray'].includes(s.type)) return false;
+        if (s.definition.p1Id === p.id || s.definition.p2Id === p.id) return true; // definiční bod
+        // Zkontrolovat, zda bod leží na přímce (vzdálenost < 3px)
+        const sp1 = points.find(pt => pt.id === s.definition.p1Id);
+        const sp2 = s.definition.p2Id ? points.find(pt => pt.id === s.definition.p2Id) : null;
+        if (!sp1 || !sp2) return false;
+        const dx = sp2.x - sp1.x, dy = sp2.y - sp1.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq < 0.0001) return false;
+        const dist = Math.abs(dy * p.x - dx * p.y + sp2.x * sp1.y - sp2.y * sp1.x) / Math.sqrt(lenSq);
+        return dist * scale < 4;
+      });
       
       let lineAngle = 0; // Úhel přímky v radiánech
       if (lineShape) {
-        const p1 = points.find(pt => pt.id === lineShape.definition.p1Id);
-        const p2 = points.find(pt => pt.id === lineShape.definition.p2Id);
-        if (p1 && p2) {
-          lineAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        const lp1 = points.find(pt => pt.id === lineShape.definition.p1Id);
+        const lp2 = points.find(pt => pt.id === lineShape.definition.p2Id);
+        if (lp1 && lp2) {
+          lineAngle = Math.atan2(lp2.y - lp1.y, lp2.x - lp1.x);
         }
       }
 
@@ -3424,9 +3455,24 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         ctx.restore();
       }
 
-      // Draw drag snap preview indicator (orange dot on line/circle when dragging a point)
+      // Draw drag snap preview indicator (orange dot on shape when dragging a point)
       const dragSnap = dragSnapPreviewRef.current;
       if (dragSnap) {
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(dragSnap.x, dragSnap.y, 7 / scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fill();
+        ctx.lineWidth = 1.5 / scale;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw line snap indicator for point tool — same style as intersection indicator
+      const lineSnapDraw = nearestLineSnapRef.current;
+      if (lineSnapDraw) {
         ctx.save();
         ctx.setLineDash([]);
         const sz = 8 / scale;
@@ -3434,19 +3480,19 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
         ctx.strokeStyle = '#f59e0b';
 
         ctx.beginPath();
-        ctx.moveTo(dragSnap.x - sz, dragSnap.y);
-        ctx.lineTo(dragSnap.x + sz, dragSnap.y);
-        ctx.moveTo(dragSnap.x, dragSnap.y - sz);
-        ctx.lineTo(dragSnap.x, dragSnap.y + sz);
+        ctx.moveTo(lineSnapDraw.x - sz, lineSnapDraw.y);
+        ctx.lineTo(lineSnapDraw.x + sz, lineSnapDraw.y);
+        ctx.moveTo(lineSnapDraw.x, lineSnapDraw.y - sz);
+        ctx.lineTo(lineSnapDraw.x, lineSnapDraw.y + sz);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(dragSnap.x, dragSnap.y, 9 / scale, 0, Math.PI * 2);
+        ctx.arc(lineSnapDraw.x, lineSnapDraw.y, 9 / scale, 0, Math.PI * 2);
         ctx.lineWidth = 1.5 / scale;
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(dragSnap.x, dragSnap.y, 2.5 / scale, 0, Math.PI * 2);
+        ctx.arc(lineSnapDraw.x, lineSnapDraw.y, 2.5 / scale, 0, Math.PI * 2);
         ctx.fillStyle = '#f59e0b';
         ctx.fill();
         ctx.restore();
