@@ -16,17 +16,7 @@ export function CviceniPage() {
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', paddingBottom: 80 }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px' }}>
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mt-6 mb-6"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Zpět na rozcestník
-        </button>
-
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-2" style={{ paddingTop: 32 }}>
           <div
             className="w-12 h-12 rounded-xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde047 100%)' }}

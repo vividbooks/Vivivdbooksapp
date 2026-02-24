@@ -1359,8 +1359,7 @@ export function FreeGeometryEditor({ onBack, darkMode, onDarkModeChange, deviceT
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    
+    // preventDefault() is already called by the native listener (passive: false) above
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
 

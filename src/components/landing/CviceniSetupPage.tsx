@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { getObjectDef } from '../../data/objects';
 import type { TaskType } from '../viewer/ObjectQuizPanel';
 import type { ParameterDef } from '../geometry/shared';
@@ -8,6 +7,26 @@ import type { ParameterDef } from '../geometry/shared';
 function parseTaskType(s: string | undefined): TaskType {
   if (s === 'objem' || s === 'povrch' || s === 'obvod' || s === 'obsah') return s;
   return 'objem';
+}
+
+function getGenitive(name: string): string {
+  const m: Record<string, string> = {
+    Krychle: 'krychle',
+    Kvádr: 'kvádru',
+    Hranol: 'hranolu',
+    Jehlan: 'jehlanu',
+    Válec: 'válce',
+    Kužel: 'kužele',
+    Koule: 'koule',
+    Čtverec: 'čtverce',
+    Obdélník: 'obdélníku',
+    Trojúhelník: 'trojúhelníku',
+    Kruh: 'kruhu',
+    Lichoběžník: 'lichoběžníku',
+    Kosočtverec: 'kosočtverce',
+    Kosodélník: 'kosodélníku',
+  };
+  return m[name] ?? name.toLowerCase();
 }
 
 /** Jedna řádka vlastních hodnot = jeden záznam parametrů */
@@ -92,23 +111,17 @@ export function CviceniSetupPage() {
     );
   }
 
-  const taskLabel = taskType === 'objem' ? 'Objem' : 'Povrch';
-  const title = taskType === 'objem'
-    ? `Počítání objemu ${def.name.toLowerCase()}u`
-    : `Počítání povrchu ${def.name.toLowerCase()}u`;
+  const genitive = getGenitive(def.name);
+  const TITLE_MAP: Record<TaskType, string> = {
+    objem: `Počítání objemu ${genitive}`,
+    povrch: `Počítání povrchu ${genitive}`,
+    obvod: `Počítání obvodu ${genitive}`,
+    obsah: `Počítání obsahu ${genitive}`,
+  };
+  const title = TITLE_MAP[taskType];
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: 24, paddingBottom: 80 }}>
-      <button
-        type="button"
-        onClick={() => navigate(def.path)}
-        className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Zpět na {def.name.toLowerCase()}
-      </button>
-
       <h1 style={{ fontSize: 24, fontWeight: 600, color: '#0f172a', marginBottom: 24 }}>
         {title}
       </h1>

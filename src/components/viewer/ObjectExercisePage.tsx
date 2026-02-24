@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Canvas3DViewer } from './Canvas3DViewer';
 import { Flat2DViewer } from './Flat2DViewer';
 import { ObjectQuizPanel, generateRandomParams, type TaskType } from './ObjectQuizPanel';
 import { Slider } from '../ui/slider';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
-import { ArrowLeft, Box, Grid3X3, Expand, List } from 'lucide-react';
+import { Grid3X3, Expand } from 'lucide-react';
 import { getObjectDef } from '../../data/objects';
 import { getWireframeDimensions } from '../geometry/wireframeDimensions';
 import type { FaceData } from '../geometry/shared';
@@ -241,41 +241,8 @@ export function ObjectExercisePage() {
           boxShadow: 'none',
         }}
       >
-        <div className="flex items-center gap-2" style={{ flexShrink: 0, padding: isMobile ? 8 : 12 }}>
-          <button
-            onClick={() => navigate(def?.path || '/')}
-            className="flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
-            style={{
-              width: isMobile ? 36 : 40,
-              height: isMobile ? 36 : 40,
-              borderRadius: '50%',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-            }}
-            title="Zpět na těleso"
-          >
-            <ArrowLeft className={isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-          </button>
-          <Link
-            to="/cviceni"
-            className={`flex items-center gap-2 text-slate-600 hover:text-slate-900 ${isMobile ? 'text-xs' : 'text-sm'}`}
-            style={{ textDecoration: 'none' }}
-          >
-            <List className={isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-            Výběr úloh
-          </Link>
-          <Link
-            to={def.path}
-            className={`flex items-center gap-2 text-slate-600 hover:text-slate-900 ${isMobile ? 'text-xs' : 'text-sm'}`}
-            style={{ textDecoration: 'none' }}
-          >
-            <Box className={isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-            Prohlížet těleso
-          </Link>
-        </div>
-
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '0 12px 12px' : '0 16px 16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px 12px 12px' : '24px 24px 24px' }}>
             <ObjectQuizPanel
               objectName={def.name}
               shapeBadge={def.badge}
