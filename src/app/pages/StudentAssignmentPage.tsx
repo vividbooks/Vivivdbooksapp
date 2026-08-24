@@ -1,6 +1,6 @@
 import { Component, useMemo, useState, useRef, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Download, GripVertical, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Eye, EyeOff, GripVertical, Image as ImageIcon } from 'lucide-react';
 import { ShareModal } from '../components/ShareModal';
 import '../../../rysovani/src/index.css';
 import type { GeometrySubmissionSnapshot } from '../../../rysovani/src/components/FreeGeometryEditor';
@@ -22,6 +22,7 @@ import { submissionPublicUrl } from '../utils/appUrl';
 import { normalizeInitialCanvasSnapshot } from '../utils/assignmentCanvasFixes';
 import { assignmentInstructionDisplay, assignmentUsesNewCanvasPerStep, parseCanvasSnapshot } from '../utils/instructionSteps';
 import { downloadAssignmentPdf } from '../utils/assignmentPdf';
+import { getAssignmentModelSolution } from '../utils/assignmentSolutions';
 import { toast } from 'sonner';
 
 const FreeGeometryEditor = lazy(() =>
@@ -89,6 +90,74 @@ type AssignmentRow = {
   new_canvas_per_step?: boolean;
 };
 
+function ModelSolutionPanel({
+  visible,
+  stepIndex,
+  stepCount,
+  stepText,
+  className,
+  onToggle,
+  onPrev,
+  onNext,
+}: {
+  visible: boolean;
+  stepIndex: number;
+  stepCount: number;
+  stepText: string;
+  className?: string;
+  onToggle: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className={className}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+        aria-pressed={visible}
+      >
+        {visible ? (
+          <EyeOff className="size-4 opacity-80" aria-hidden />
+        ) : (
+          <Eye className="size-4 opacity-80" aria-hidden />
+        )}
+        {visible ? 'Skrýt řešení' : 'Zobrazit řešení'}
+      </button>
+      {visible ? (
+        <div className="space-y-3">
+          {stepCount > 1 ? (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
+              <button
+                type="button"
+                onClick={onPrev}
+                disabled={stepIndex <= 0}
+                className="flex size-8 items-center justify-center rounded-md text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-35"
+                aria-label="Předchozí krok řešení"
+              >
+                <ChevronLeft className="size-4" aria-hidden />
+              </button>
+              <span className="text-xs font-semibold tabular-nums text-slate-700">
+                Krok řešení {stepIndex + 1} z {stepCount}
+              </span>
+              <button
+                type="button"
+                onClick={onNext}
+                disabled={stepIndex >= stepCount - 1}
+                className="flex size-8 items-center justify-center rounded-md text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-35"
+                aria-label="Další krok řešení"
+              >
+                <ChevronRight className="size-4" aria-hidden />
+              </button>
+            </div>
+          ) : null}
+          <p className="text-[13px] leading-relaxed text-slate-600 whitespace-pre-wrap">{stepText}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 class StudentAssignmentErrorBoundary extends Component<
   { children: React.ReactNode },
   { error: Error | null }
@@ -149,6 +218,8 @@ export default function StudentAssignmentPage() {
   const [projectionSrc, setProjectionSrc] = useState<string | null>(null);
   const [autoDetectRequestId, setAutoDetectRequestId] = useState(0);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [showModelSolution, setShowModelSolution] = useState(false);
+  const [solutionStepIndex, setSolutionStepIndex] = useState(0);
   const [autoDetectSrc, setAutoDetectSrc] = useState<string | null>(null);
   const [canvasSessionKey, setCanvasSessionKey] = useState(0);
   const [editorInitialSnapshot, setEditorInitialSnapshot] =
@@ -225,6 +296,8 @@ export default function StudentAssignmentPage() {
         // (Session storage might have it collapsed from a previous visit.)
         setAsideCollapsed(false);
         setLoadState('ready');
+        setShowModelSolution(false);
+        setSolutionStepIndex(0);
       } catch (e) {
         if (!cancelled) {
           console.error('Načtení zadání (Supabase):', e);
@@ -274,6 +347,27 @@ export default function StudentAssignmentPage() {
   const instructionView = useMemo(() => {
     return assignment ? assignmentInstructionDisplay(assignment) : null;
   }, [assignment]);
+
+  const modelSolution = useMemo(
+    () => getAssignmentModelSolution(assignment?.id ?? assignmentId),
+    [assignment?.id, assignmentId],
+  );
+  const modelSolutionSteps = modelSolution?.steps?.length
+    ? modelSolution.steps
+    : modelSolution
+      ? [{ text: modelSolution.explanation, snapshot: modelSolution.snapshot }]
+      : [];
+  const clampedSolutionStep = Math.min(
+    Math.max(0, solutionStepIndex),
+    Math.max(0, modelSolutionSteps.length - 1),
+  );
+  const activeSolutionStep = showModelSolution ? modelSolutionSteps[clampedSolutionStep] ?? null : null;
+  const toggleModelSolution = () => {
+    setShowModelSolution(v => {
+      if (!v) setSolutionStepIndex(0);
+      return !v;
+    });
+  };
 
   const newCanvasPerStep = assignment ? assignmentUsesNewCanvasPerStep(assignment) : false;
   const stepsCount = instructionView?.kind === 'steps' ? instructionView.steps.length : 0;
@@ -508,6 +602,7 @@ export default function StudentAssignmentPage() {
               projectionOpacity={projectionOpacity}
               autoDetectImageSrc={autoDetectSrc}
               autoDetectRequestId={autoDetectRequestId}
+              overlaySnapshot={activeSolutionStep?.snapshot ?? null}
               assignmentToolbarSlot={
                 openAssignmentButton ? (
                   <div className="flex items-center gap-2">
@@ -634,6 +729,20 @@ export default function StudentAssignmentPage() {
                           {activeStep.text}
                         </div>
                       ) : null}
+                      {modelSolution ? (
+                        <ModelSolutionPanel
+                          className={activeStep.text.trim() ? 'mt-4 space-y-3' : 'space-y-3'}
+                          visible={showModelSolution}
+                          stepIndex={clampedSolutionStep}
+                          stepCount={modelSolutionSteps.length}
+                          stepText={activeSolutionStep?.text || modelSolution.explanation}
+                          onToggle={toggleModelSolution}
+                          onPrev={() => setSolutionStepIndex(i => Math.max(0, i - 1))}
+                          onNext={() =>
+                            setSolutionStepIndex(i => Math.min(modelSolutionSteps.length - 1, i + 1))
+                          }
+                        />
+                      ) : null}
                       {activeStep.image ? (
                         <div className={activeStep.text.trim() ? 'mt-4 space-y-2' : 'space-y-2'}>
                           <img
@@ -705,6 +814,20 @@ export default function StudentAssignmentPage() {
                   <div className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-wrap [font-family:'Fenomen_Sans',system-ui,sans-serif]">
                     {instructionView.text || '—'}
                   </div>
+                  {modelSolution ? (
+                    <ModelSolutionPanel
+                      className="mt-4 space-y-3"
+                      visible={showModelSolution}
+                      stepIndex={clampedSolutionStep}
+                      stepCount={modelSolutionSteps.length}
+                      stepText={activeSolutionStep?.text || modelSolution.explanation}
+                      onToggle={toggleModelSolution}
+                      onPrev={() => setSolutionStepIndex(i => Math.max(0, i - 1))}
+                      onNext={() =>
+                        setSolutionStepIndex(i => Math.min(modelSolutionSteps.length - 1, i + 1))
+                      }
+                    />
+                  ) : null}
                   {assignment.instruction_image ? (
                     <div className="mt-4 space-y-2">
                       <img

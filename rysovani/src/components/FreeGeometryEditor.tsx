@@ -264,6 +264,110 @@ export type GeometrySubmissionSnapshot = {
   freehandPaths: FreehandPath[];
 };
 
+function overlayPointById(
+  points: GeoPoint[],
+  id: string | undefined,
+): GeoPoint | undefined {
+  if (!id) return undefined;
+  return points.find(p => p.id === id);
+}
+
+/** Vzorové řešení úkolu — kreslí se přes studentské rýsování, bez interakce. */
+function drawSolutionOverlay(
+  ctx: CanvasRenderingContext2D,
+  snap: GeometrySubmissionSnapshot,
+  scale: number,
+  color: string,
+) {
+  const points = snap.points ?? [];
+  const shapes = snap.shapes ?? [];
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = 0.92;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+
+  for (const s of shapes) {
+    const a = overlayPointById(points, s.definition.p1Id);
+    const b = overlayPointById(points, s.definition.p2Id);
+    if (!a) continue;
+    const dashed = s.type === 'lineDashed' || s.type === 'lineDashDot' || Boolean(s.thinStroke);
+    ctx.setLineDash(dashed ? [8 / scale, 6 / scale] : []);
+    ctx.lineWidth = s.thinStroke ? 1.15 / scale : 2.15 / scale;
+
+    if ((s.type === 'circle' || s.type === 'circleArc') && b) {
+      const r = Math.hypot(b.x - a.x, b.y - a.y);
+      if (r > 1) {
+        ctx.beginPath();
+        if (s.type === 'circleArc') {
+          const span = s.definition.arcSpan ?? (2 * Math.PI) / 3;
+          const th = Math.atan2(b.y - a.y, b.x - a.x);
+          ctx.arc(a.x, a.y, r, th - span / 2, th + span / 2);
+        } else {
+          ctx.arc(a.x, a.y, r, 0, Math.PI * 2);
+        }
+        ctx.stroke();
+      }
+    } else if (s.type === 'segment' && b) {
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    } else if ((s.type === 'line' || s.type === 'lineDashed' || s.type === 'lineDashDot') && b) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const k = 4000 / len;
+      ctx.beginPath();
+      ctx.moveTo(a.x - dx * k, a.y - dy * k);
+      ctx.lineTo(a.x + dx * k, a.y + dy * k);
+      ctx.stroke();
+    } else if (s.type === 'ray' && b) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const k = 4000 / len;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(a.x + dx * k, a.y + dy * k);
+      ctx.stroke();
+    }
+
+    if (s.label) {
+      const lx = b ? (a.x + b.x) / 2 : a.x + 10 / scale;
+      const ly = b ? (a.y + b.y) / 2 : a.y - 12 / scale;
+      ctx.setLineDash([]);
+      ctx.font = `italic ${18 / scale}px Georgia, "Times New Roman", serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(s.label, lx + 8 / scale, ly - 4 / scale);
+    }
+  }
+
+  ctx.setLineDash([]);
+  ctx.lineWidth = 2.3 / scale;
+  for (const p of points) {
+    if (p.hidden) continue;
+    const arm = 7 / scale;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - arm);
+    ctx.lineTo(p.x, p.y + arm);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(p.x - arm, p.y);
+    ctx.lineTo(p.x + arm, p.y);
+    ctx.stroke();
+    if (p.label) {
+      ctx.font = `italic ${22 / scale}px Georgia, "Times New Roman", serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(p.label, p.x + 8 / scale, p.y - 6 / scale);
+    }
+  }
+  ctx.restore();
+}
+
 /** Ohraničení všech objektů ve světových souřadnicích — pro vycentrování a „fit“ při otevření úkolu. */
 function computeGeometryWorldBounds(snap: GeometrySubmissionSnapshot): {
   minX: number;
@@ -480,6 +584,8 @@ interface FreeGeometryEditorProps {
   autoDetectImageSrc?: string | null;
   /** Změna hodnoty spustí novou detekci objektů (např. inkrement). */
   autoDetectRequestId?: number;
+  /** Vzorové řešení vykreslené přes plátno (úkol). */
+  overlaySnapshot?: GeometrySubmissionSnapshot | null;
 }
 
 interface RecordedStep {
@@ -1036,6 +1142,7 @@ export function FreeGeometryEditor({
   projectionOpacity = 0.35,
   autoDetectImageSrc = null,
   autoDetectRequestId = 0,
+  overlaySnapshot = null,
 }: FreeGeometryEditorProps) {
   const isMobile = useIsMobile();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -6647,6 +6754,7 @@ export function FreeGeometryEditor({
     effectiveProjectionEnabled,
     effectiveProjectionSrc,
     effectiveProjectionOpacity,
+    overlaySnapshot,
   ]);
 
 
@@ -8413,6 +8521,10 @@ export function FreeGeometryEditor({
         ctx.fillText(p.label, labelX, labelY);
       }
     });
+
+    if (overlaySnapshot) {
+      drawSolutionOverlay(ctx, overlaySnapshot, scale, darkMode ? '#fbbf24' : '#c2410c');
+    }
 
     if (!hideToolOverlays) {
     // 3b. Intersection snap indicator (active only — when cursor is near)
