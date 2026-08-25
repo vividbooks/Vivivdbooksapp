@@ -1,4 +1,5 @@
 import type { GeometrySubmissionSnapshot } from '../../../rysovani/src/components/FreeGeometryEditor';
+import { rotateSnapshotForAssignment } from './assignmentTransforms';
 
 /** Jednotlivý krok zadání v DB (`geometry_circuit_assignments.instruction_steps`). */
 export type InstructionStep = {
@@ -142,6 +143,18 @@ const CIRCUMCIRCLE_ASSIGNMENT_ID = '4468a8e9-cb79-4dd7-9063-36734bd9ea4e';
 const CIRCUMCIRCLE_STEP_4_TEXT =
   'Narýsuj libovolný trojúhelník včetně jeho kružnice opsané, aby platilo, že střed této kružnice leží na některé ze stran trojúhelníku.';
 
+/** Natočí zadaný útvar, aby dané přímky nebyly vodorovné (viz `assignmentTransforms.ts`). */
+function withAssignmentRotation(
+  assignmentId: string | undefined,
+  steps: InstructionStepContent[],
+): InstructionStepContent[] {
+  return steps.map(step =>
+    step.canvasSnapshot
+      ? { ...step, canvasSnapshot: rotateSnapshotForAssignment(assignmentId, step.canvasSnapshot) }
+      : step,
+  );
+}
+
 function withAssignmentStepOverrides(
   assignmentId: string | undefined,
   steps: InstructionStepContent[],
@@ -166,7 +179,10 @@ export function assignmentInstructionDisplay(row: {
 }):
   | { kind: 'steps'; steps: InstructionStepContent[] }
   | { kind: 'text'; text: string } {
-  const steps = withAssignmentStepOverrides(row.id, normalizeInstructionSteps(row.instruction_steps));
+  const steps = withAssignmentRotation(
+    row.id,
+    withAssignmentStepOverrides(row.id, normalizeInstructionSteps(row.instruction_steps)),
+  );
   if (steps.length > 0) return { kind: 'steps', steps };
   return { kind: 'text', text: row.instruction_text || '' };
 }

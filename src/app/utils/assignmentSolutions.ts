@@ -1,4 +1,5 @@
 import type { GeometrySubmissionSnapshot } from '../../../rysovani/src/components/FreeGeometryEditor';
+import { rotateSnapshotForAssignment } from './assignmentTransforms';
 
 export type AssignmentSolutionStep = {
   text: string;
@@ -140,6 +141,23 @@ function reflectPoint(p: V, origin: V, dir: V): V {
 
 function modelSolution(explanation: string, steps: AssignmentSolutionStep[]): AssignmentModelSolution {
   return { explanation, steps, snapshot: steps[steps.length - 1]!.snapshot };
+}
+
+/**
+ * Řešení se počítají v původní soustavě zadání. Zadání se ale při zobrazení natáčí,
+ * takže stejné otočení musí projít i řešení.
+ */
+function rotatedSolution(
+  assignmentId: string,
+  solution: AssignmentModelSolution,
+): AssignmentModelSolution {
+  const rotate = (snap: GeometrySubmissionSnapshot) =>
+    rotateSnapshotForAssignment(assignmentId, snap);
+  return {
+    explanation: solution.explanation,
+    snapshot: rotate(solution.snapshot),
+    steps: solution.steps.map(step => ({ ...step, snapshot: rotate(step.snapshot) })),
+  };
 }
 
 /** Rovnoběžník ABCD: |BD| = 2|AC|, B nebo D na přímce p. */
@@ -524,7 +542,7 @@ function triangleMedianHeightSolution(): AssignmentModelSolution {
         snapshot: snap(['sol-n'], ['sol-ab', 'sol-tc']),
       },
       {
-        text: 'Vrchol C leží na těžnici t_c. Výška v_c k straně AB měří 4 cm, AB je vodorovná, proto má C y-ovou souřadnici o 4 cm menší než AB (M leží uvnitř trojúhelníku, C je na téže straně od AB). Označte C.',
+        text: 'Vrchol C leží na těžnici t_c a zároveň na rovnoběžce se stranou AB vzdálené 4 cm (to je výška v_c). Ze dvou takových rovnoběžek vyberte tu, na jejíž straně leží bod M — ten je uvnitř trojúhelníku. Označte C.',
         snapshot: snap(['sol-n', 'sol-c'], ['sol-ab', 'sol-tc']),
       },
       {
@@ -628,7 +646,7 @@ function squareSideOnLineSolution(): AssignmentModelSolution {
   const snap = (p: string[], s: string[]) => pickSnapshot(allPoints, allShapes, p, s);
 
   return modelSolution(
-    'Strana BC leží na vodorovné přímce p, proto je čtverec osově souměrný podle kolmice z O na p. Vzdálenost O od p je polovina strany. Vrcholy jsou o a/2 vlevo/vpravo a stejně daleko na opačnou stranu od O. Záměna B a C je jen změna orientace.',
+    'Čtverec je osově souměrný podle kolmice z O na přímku p. Vzdálenost O od p je polovina strany, takže od paty této kolmice vyneseme na obě strany a/2 a získáme B a C. Strana AD leží na rovnoběžce s p ve stejné vzdálenosti na opačné straně od O. Záměna B a C je jen změna orientace.',
     [
       {
         text: 'Strana BC leží na přímce p, střed čtverce je O. Kolmice z O na p půlí stranu BC; pata je střed strany BC. Vzdálenost |Op| je rovna polovině strany čtverce.',
@@ -671,7 +689,7 @@ function isoscelesTrapezoidSolution(): AssignmentModelSolution {
   const snap = (p: string[], s: string[]) => pickSnapshot(allPoints, allShapes, p, s);
 
   return modelSolution(
-    'AB ∥ p, proto je CD vodorovná. V rovnoramenném lichoběžníku jsou přesahy základny AB přes CD stejně velké: (|AB| − |CD|)/2 = |AB|/4. Od A a B vyneseme tento přesah na p a dostaneme D a C.',
+    'Základna CD leží na přímce p, která je rovnoběžná s AB. V rovnoramenném lichoběžníku jsou přesahy základny AB přes CD stejně velké: (|AB| − |CD|)/2 = |AB|/4. Od kolmých průmětů A a B na p vyneseme tento přesah dovnitř a dostaneme D a C.',
     [
       {
         text: 'Základny AB a CD jsou rovnoběžné a C, D leží na p, proto je CD částí přímky p. |CD| = ½·|AB|, tedy každý z přesahů základny AB je čtvrtina |AB|.',
@@ -1224,10 +1242,10 @@ function triangleFromOrthocenterSolution(): AssignmentModelSolution {
   const snap = (p: string[], s: string[]) => pickSnapshot(allPoints, allShapes, p, s);
 
   return modelSolution(
-    'AB je vodorovná, proto výška z C na AB je svislá a prochází V. Výška z A je přímka AV a je kolmá na BC. Vrchol C je průsečík svislice z V s kolmicí k AV vedenou bodem B.',
+    'Výška z C je kolmá na AB a prochází ortocentrem V. Výška z A je přímka AV a je kolmá na BC. Vrchol C je průsečík kolmice k AB vedené bodem V s kolmicí k AV vedenou bodem B.',
     [
       {
-        text: 'Strana AB je vodorovná, proto je výška na AB svislá. Ortocentrum V na ní leží, takže vrchol C leží na svislici vedené bodem V.',
+        text: 'Ortocentrum leží na všech třech výškách. Výška z vrcholu C je kolmá na stranu AB a prochází bodem V — sestrojte ji. Na ní leží vrchol C.',
         snapshot: snap([], ['sol-ab', 'sol-alt-c']),
       },
       {
@@ -1235,7 +1253,7 @@ function triangleFromOrthocenterSolution(): AssignmentModelSolution {
         snapshot: snap([], ['sol-ab', 'sol-alt-c', 'sol-av', 'sol-bc-perp']),
       },
       {
-        text: 'Vrchol C je průsečík svislice z V s kolmicí k AV z B. Narýsujte trojúhelník ABC. Řešení je jediné.',
+        text: 'Vrchol C je průsečíkem obou kolmic. Narýsujte trojúhelník ABC. Řešení je jediné.',
         snapshot: snap(['sol-c'], ['sol-ab', 'sol-alt-c', 'sol-av', 'sol-ac', 'sol-bc']),
       },
     ],
@@ -1287,28 +1305,32 @@ function triangleFromAngleBisectorSolution(): AssignmentModelSolution {
   );
 }
 
-const SOLUTIONS: Record<string, AssignmentModelSolution> = {
-  '4a1829f5-69f3-4737-b8e6-8b898b176901': parallelogramLongerDiagonalSolution(),
-  '09900fbe-d904-45f1-9450-5f20eaaba23b': squareInscribedInCircleSolution(),
-  '03b73633-c003-46dd-a9a3-1cd8253a2fea': isoscelesWithHeightSolution(),
-  '29b49708-92f0-4ef6-a947-8f0bdef02451': rectangleWithSideMidpointSolution(),
-  '401b7ed6-fd9b-42ab-8ea0-c147657c5ab6': triangleMedianHeightSolution(),
-  '519619a4-1076-4da8-b81a-bf1024d9b3a8': isoscelesLegMidpointSolution(),
-  '3f73cd7a-f6d9-46ef-a2f2-9f34d1479bbe': squareSideOnLineSolution(),
-  '834c4b76-6217-4564-83f5-503900b0c711': isoscelesTrapezoidSolution(),
-  '605d7ecd-faf2-474d-a304-3ab328ae5d0e': rhombusDiagonalSolution(),
-  'c0376830-b727-477e-9837-48f9f47552b4': rhombusSideSolution(),
-  '46725d97-9b34-4003-ae15-c020b22a2704': circleBetweenParallelsSolution(),
-  '61f0d7a6-9483-44de-83a8-a1b160fef1f2': centroidTriangleSolution(),
-  '656c28a0-9549-4554-8615-d5d3ad388ce1': tangentsToCircleSolution(),
-  '3e77b1d1-4a07-4b1a-b49f-a8cd108a8de5': chordOfGivenLengthSolution(),
-  'fda41fe6-dfad-4881-be72-771d509ba49f': circleThroughTwoPointsSolution(),
-  'c67ac52d-eaea-46b4-8fda-d4dff5d29488': medianAndParallelSolution(),
-  'cb596b9e-c109-48f9-874a-90abe34ba852': hexagonFromDiagonalSolution(),
-  'a6d9de88-c424-46fa-8af1-814c07a4466e': circleTangentToLineSolution(),
-  '66fa2048-f25d-43ce-97ca-491807df805b': triangleFromOrthocenterSolution(),
-  '0daeda38-6964-4e93-a3db-745003b63e53': triangleFromAngleBisectorSolution(),
-};
+const SOLUTION_BUILDERS: [string, () => AssignmentModelSolution][] = [
+  ['4a1829f5-69f3-4737-b8e6-8b898b176901', parallelogramLongerDiagonalSolution],
+  ['09900fbe-d904-45f1-9450-5f20eaaba23b', squareInscribedInCircleSolution],
+  ['03b73633-c003-46dd-a9a3-1cd8253a2fea', isoscelesWithHeightSolution],
+  ['29b49708-92f0-4ef6-a947-8f0bdef02451', rectangleWithSideMidpointSolution],
+  ['401b7ed6-fd9b-42ab-8ea0-c147657c5ab6', triangleMedianHeightSolution],
+  ['519619a4-1076-4da8-b81a-bf1024d9b3a8', isoscelesLegMidpointSolution],
+  ['3f73cd7a-f6d9-46ef-a2f2-9f34d1479bbe', squareSideOnLineSolution],
+  ['834c4b76-6217-4564-83f5-503900b0c711', isoscelesTrapezoidSolution],
+  ['605d7ecd-faf2-474d-a304-3ab328ae5d0e', rhombusDiagonalSolution],
+  ['c0376830-b727-477e-9837-48f9f47552b4', rhombusSideSolution],
+  ['46725d97-9b34-4003-ae15-c020b22a2704', circleBetweenParallelsSolution],
+  ['61f0d7a6-9483-44de-83a8-a1b160fef1f2', centroidTriangleSolution],
+  ['656c28a0-9549-4554-8615-d5d3ad388ce1', tangentsToCircleSolution],
+  ['3e77b1d1-4a07-4b1a-b49f-a8cd108a8de5', chordOfGivenLengthSolution],
+  ['fda41fe6-dfad-4881-be72-771d509ba49f', circleThroughTwoPointsSolution],
+  ['c67ac52d-eaea-46b4-8fda-d4dff5d29488', medianAndParallelSolution],
+  ['cb596b9e-c109-48f9-874a-90abe34ba852', hexagonFromDiagonalSolution],
+  ['a6d9de88-c424-46fa-8af1-814c07a4466e', circleTangentToLineSolution],
+  ['66fa2048-f25d-43ce-97ca-491807df805b', triangleFromOrthocenterSolution],
+  ['0daeda38-6964-4e93-a3db-745003b63e53', triangleFromAngleBisectorSolution],
+];
+
+const SOLUTIONS: Record<string, AssignmentModelSolution> = Object.fromEntries(
+  SOLUTION_BUILDERS.map(([id, build]) => [id, rotatedSolution(id, build())]),
+);
 
 export function getAssignmentModelSolution(
   assignmentId: string | undefined,

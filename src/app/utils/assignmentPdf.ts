@@ -105,6 +105,37 @@ function snapshotBounds(snap: GeometrySubmissionSnapshot): {
   return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
 }
 
+/** Umístění názvu přímky / kružnice v souřadnicích PDF (už po `tx`/`ty`). */
+function shapeLabelPdfPosition(
+  type: string | undefined,
+  a: { x: number; y: number },
+  b: { x: number; y: number } | null,
+): { x: number; y: number } {
+  if ((type === 'circle' || type === 'circleArc') && b) {
+    const r = Math.hypot(b.x - a.x, b.y - a.y);
+    if (r > 1) {
+      const th = Math.atan2(b.y - a.y, b.x - a.x);
+      const pad = 18;
+      return {
+        x: a.x + Math.cos(th) * (r + pad),
+        y: a.y + Math.sin(th) * (r + pad),
+      };
+    }
+  }
+  if (b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const t = type === 'ray' ? 0.55 : 0.5;
+    const pad = 22;
+    return {
+      x: a.x + dx * t - (dy / len) * pad,
+      y: a.y + dy * t + (dx / len) * pad,
+    };
+  }
+  return { x: a.x + 16, y: a.y - 16 };
+}
+
 function drawSnapshot(
   ctx: CanvasRenderingContext2D,
   snap: GeometrySubmissionSnapshot,
@@ -197,14 +228,13 @@ function drawSnapshot(
     }
 
     if (s.label) {
-      const lx = b ? (a.x + b.x) / 2 : a.x + 10;
-      const ly = b ? (a.y + b.y) / 2 : a.y - 10;
       ctx.setLineDash([]);
       ctx.font = 'italic 18px Georgia, "Times New Roman", serif';
       ctx.fillStyle = '#111827';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(s.label, lx + 6, ly - 4);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const pos = shapeLabelPdfPosition(s.type, a, b);
+      ctx.fillText(s.label, pos.x, pos.y);
     }
   }
 
